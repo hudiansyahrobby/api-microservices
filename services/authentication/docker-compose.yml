@@ -1,0 +1,10 @@
+version: "3.7"
+services:
+  web:
+    build:
+      context: ./
+    volumes:
+      - .:/usr/src/app
+    image: apikom
+    ports:
+      - "8082:8082"

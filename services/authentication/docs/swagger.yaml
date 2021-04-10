@@ -1,0 +1,200 @@
+openapi: 3.0.0
+
+info:
+  title: "APIKOM API"
+  description: "API for APIKOM"
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8000/api/v1
+paths:
+  /login/oauth2-login:
+    post:
+      description: "Login with facebook"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+      responses:
+        '200':
+          description: "User successfully login"
+
+
+  /register/firebase-register:
+    post:
+      description: "Register with email"
+      tags:
+        - "Authentication"
+      requestBody:
+        # required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserWithEmail'
+      responses:
+        '201':
+          description: User successfully registered
+        '422':
+          description: Validation error
+        '500':
+          description: Server Error
+  /login/firebase-login:
+    post:
+      description: "Login with Email"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "antoni@gmail.com"
+                password:
+                  type: string
+                  example: "Testing12,."
+      responses:
+        '200':
+          description: Login successfully
+  /register/username-register:
+    post:
+      description: "Register with email"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserWithUsername'
+      responses:
+        '201':
+          description: User successfully registered
+        '422':
+          description: Validation error
+        '500':
+          description: Server Error
+  /login/username-login:
+    post:
+      description: "Login with Username"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "antoni"
+                password:
+                  type: string
+                  example: "Testing12,."
+      responses:
+        '200':
+          description: User successfully login
+
+  /login/facebook-login:
+    post:
+      description: "Login with facebook"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+      responses:
+        '200':
+          description: User successfully login
+  /refresh-token:
+    post:
+      description: "Revoke Refresh Token"
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uid:
+                  type: string
+                  example: "aduwudhuwhduw"
+      responses:
+        '200':
+          description: Refresh token revoked successfully
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout
+      description: ''
+      responses:
+        '200':
+          description: Signout successfully
+components:
+  schemas:
+    UserWithUsername:
+      type: object
+      properties:
+        displayName:
+          type: string
+          description: only contain alphapet or space
+          pattern: '/^[a-zA-Z ]*$/'
+          example: 'antoni'
+        username:
+          type: string
+          example: "antoni"
+        phoneNumber:
+          type: string
+          example: "+6286532123215"
+        password:
+          type: string
+          minimum: 8
+          description: password must be at least one uppercase letter, one lowercase letter,
+            one number and one special character
+          example: "Testing12,."
+        passwordConfirmation:
+          type: string
+          example: "Testing12,."
+    UserWithEmail:
+      type: object
+      properties:
+        displayName:
+          type: string
+          description: only contain alphapet or space
+          pattern: '/^[a-zA-Z ]*$/'
+          example: 'antoni'
+        email:
+          type: string
+          example: "antoni@gmail.com"
+        phoneNumber:
+          type: string
+          example: "+6286532126215"
+        password:
+          type: string
+          minimum: 8
+          description: >-
+            password must be at least one uppercase letter, one lowercase letter,
+            one number and one special character
+          example: "Testing12,."
+        passwordConfirmation:
+          type: string
+          example: "Testing12,."
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "aduwudhuwhduw"
