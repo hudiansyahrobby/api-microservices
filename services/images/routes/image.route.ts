@@ -15,10 +15,10 @@ router.post('/images', prepareImages, resizeImages, saveImages);
 
 router.get('/images/:id', getImageById);
 
+router.delete('/images/:id', deleteImageById);
+
 router.get('/images/products/:productId', getImageByProductId);
 
 router.delete('/images/products/:productId', deleteImageByProductId);
-
-router.delete('/images/:id', deleteImageById);
 
 export default router;

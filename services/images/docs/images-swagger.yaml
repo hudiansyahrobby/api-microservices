@@ -1,26 +1,27 @@
 openapi: 3.0.0
 
 info:
-  title: "Ecommerce APP API"
-  description: "API for ecommerce app"
+  title: "Microservices API"
+  description: "API for Microservices"
   version: "1.0.0"
 servers:
-  - url: http://localhost:8000/api/v1
+  - url: http://localhost:8084/api/v1
 paths: 
-  /categories:
+  /images:
     post:
-      description: "Create new categories (ONLY ADMIN)"
+      summary: Upload Images
+      description: "Upload Images"
       tags:
-        - "Categories"
+        - "Images"
       security:
         - bearerAuth: []
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               allOf: 
-                - $ref: '#/components/schemas/Category'
+                - $ref: '#/components/schemas/Image'
       responses:
         201:
           description: "Created"
@@ -30,79 +31,101 @@ paths:
           description: "Validation Error"
         500:
           description: "Server Error"
+  /images/{imageId}:
     get:
-      description: "Get all categories (ONLY ADMIN)"
+      summary: Get image by ID
+      description: "Get image by ID"
       tags:
-        - "Categories"
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: "Success"
-        401:
-          description: "Access Denied"
-        500:
-          description: "Server Error"
-  /categories/{categoryId}:
-    put:
-      description: "update category by id (ONLY ADMIN)"
-      tags:
-        - "Categories"
+        - "Images"
       parameters:
       - in: path
         required: true
-        name: categoryId
+        name: imageId
         schema:
           type: string
-        description: update category by id  
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf: 
-                - $ref: '#/components/schemas/Category'
+        description: Get image by id  
       responses:
         200:
           description: "OK"
         401:
           description: "Access Denied"
         404:
-          description: "Category not found"
-        422:
-          description: "Validation Error"
+          description: "Image not found"
         500:
           description: "Server Error"
     delete:
-      description: "Delete category by id (ONLY ADMIN)"
+      summary: Delete image by ID
+      description: "Delete image by ID"
       parameters:
       - in: path
         required: true
-        name: categoryId
+        name: imageId
         schema:
           type: string
-        description: Get category by id  
+        description: Get image by id  
       security:
         - bearerAuth: []
       tags:
-        - "Categories"
+        - "Images"
+      responses:
+        200:
+          description: "Image deleted successfully"
+        400:
+          description: "Bad Request"
+        404:
+          description: "Image not found"
+        500:
+          description: "Server Error"
+  /images/products/{productId}:
+    get:
+      summary: Get image by product ID
+      description: "Get image by product ID"
+      tags:
+        - "Images"
+      parameters:
+      - in: path
+        required: true
+        name: productId
+        schema:
+          type: string
+        description: Get image by productId  
       responses:
         200:
           description: "OK"
-        404:
-          description: "Category not found"
+        500:
+          description: "Server Error"
+    delete:
+      summary: Delete image by product ID
+      description: "Delete image by product ID"
+      parameters:
+      - in: path
+        required: true
+        name: productId
+        schema:
+          type: string
+        description: Get image by productId  
+      security:
+        - bearerAuth: []
+      tags:
+        - "Images"
+      responses:
+        200:
+          description: "Image deleted successfully"
         500:
           description: "Server Error"
 components:
   schemas:
-    Category:
+    Image:
       type: object
       properties:
-        name:
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+        product_id:
           type: string
-          example: "electronics"
+          example: 96b46303-46ee-4c94-b774-eaabbf14777e
   securitySchemes:
     bearerAuth:
       type: http

@@ -16,7 +16,6 @@ import { deleteImageOnCloudinary } from '../helpers/initCloudinary';
 
 export const prepareImages = (req: Request, res: Response, next: NextFunction) => {
     uploadFiles(req, res, (err: any) => {
-        console.log(req.body.images);
         if (err instanceof multer.MulterError) {
             if (err.code === 'LIMIT_UNEXPECTED_FILE') {
                 return res.status(422).json({
@@ -182,8 +181,19 @@ export const deleteImageByProductId = async (req: Request, res: Response, next: 
     const { productId } = req.params;
 
     try {
-        const image = await destroyImageByProductId(productId);
-        return res.status(200).json({ message: 'OK', data: image, status: 200 });
+        const images = await findImageByProductId(productId);
+        if (images.length === 0) {
+            return res.status(404).json({
+                message: 'Not Found',
+                status: 404,
+                error: {
+                    message: `Image with product ID ${productId} not found`,
+                    type: 'Not Found',
+                },
+            });
+        }
+        await destroyImageByProductId(productId);
+        return res.status(200).json({ message: 'OK', data: images, status: 200 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
@@ -217,7 +227,7 @@ export const deleteImageById = async (req: Request, res: Response, next: NextFun
         await removeImageOnDB(id);
         await deleteImageOnCloudinary(image.imageId);
 
-        return res.status(201).json({ message: 'Image successfully deleted', data: image, status: 201 });
+        return res.status(201).json({ message: 'Image successfully deleted', data: image, status: 200 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({

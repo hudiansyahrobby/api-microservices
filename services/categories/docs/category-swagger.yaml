@@ -1,14 +1,15 @@
 openapi: 3.0.0
 
 info:
-  title: "APIKOM APP API"
-  description: "API for apikom app"
+  title: "Microservices API"
+  description: "API for Microservices"
   version: "1.0.0"
 servers:
-  - url: http://localhost:8000/api/v1
+  - url: http://localhost:8085/api/v1
 paths: 
   /categories:
     post:
+      summary: Create New Category 
       description: "Create new categories (ONLY ADMIN)"
       tags:
         - "Categories"
@@ -31,7 +32,8 @@ paths:
         500:
           description: "Server Error"
     get:
-      description: "Get all categories (ONLY ADMIN)"
+      summary: Get All Categories
+      description: "Get all categories"
       tags:
         - "Categories"
       responses:
@@ -41,6 +43,7 @@ paths:
           description: "Server Error"
   /categories/{categoryId}:
     get:
+      summary: Get Category By ID
       description: "get category by id (ONLY ADMIN)"
       tags:
         - "Categories"
@@ -59,7 +62,8 @@ paths:
         500:
           description: "Server Error"
     put:
-      description: "update category by id (ONLY ADMIN)"
+      summary: Update Category By ID
+      description: "update category by id"
       tags:
         - "Categories"
       parameters:
@@ -90,14 +94,15 @@ paths:
         500:
           description: "Server Error"
     delete:
-      description: "Delete category by id (ONLY ADMIN)"
+      summary: Delete Category By ID
+      description: "Delete category by id"
       parameters:
       - in: path
         required: true
         name: categoryId
         schema:
           type: string
-        description: Get category by id  
+        description: Delete Category By ID
       security:
         - bearerAuth: []
       tags:

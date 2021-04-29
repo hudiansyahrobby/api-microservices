@@ -40,12 +40,13 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'APIKOM API',
+            title: 'Microservices API',
+            description: 'API for Microservices',
             version: '1.0.0',
         },
         servers: [
             {
-                url: 'http://localhost:8000/api/v1',
+                url: 'http://localhost:8084/api/v1',
             },
         ],
     },
