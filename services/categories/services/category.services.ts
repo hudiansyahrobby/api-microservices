@@ -64,7 +64,6 @@ export const checkAuth = async (token: string | undefined) => {
             headers: headersConfig,
         },
     );
-    console.log('HAHAHA');
     const uid = response.data.data.uid;
     return uid;
 };

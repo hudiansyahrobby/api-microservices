@@ -10,7 +10,7 @@ paths:
   /categories:
     post:
       summary: Create New Category 
-      description: "Create new categories (ONLY ADMIN)"
+      description: "Create new categories"
       tags:
         - "Categories"
       security:
@@ -44,7 +44,7 @@ paths:
   /categories/{categoryId}:
     get:
       summary: Get Category By ID
-      description: "get category by id (ONLY ADMIN)"
+      description: "get category by id"
       tags:
         - "Categories"
       parameters:

@@ -27,6 +27,8 @@ paths:
           description: "Created"
         401:
           description: "Access Denied"
+        403:
+          description: "Forbidden"
         422:
           description: "Validation Error"
         500:
@@ -72,6 +74,8 @@ paths:
           description: "Image deleted successfully"
         400:
           description: "Bad Request"
+        403:
+          description: "Forbidden"
         404:
           description: "Image not found"
         500:
@@ -111,6 +115,8 @@ paths:
       responses:
         200:
           description: "Image deleted successfully"
+        403:
+          description: "Forbidden"
         500:
           description: "Server Error"
 components:
