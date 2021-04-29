@@ -6,10 +6,12 @@ import { config as dotenv } from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import initDB from './helpers/initDB';
-
-// Routes
-import profileRoute from './routes/profile.route';
+import { logger } from './helpers/logger';
+import { sendErrorDev, sendErrorProd } from './errorHandler/errorResponse';
 import firebaseInit from './helpers/firebase/firebaseInit';
+import profileRoute from './routes/profile.route';
+import AppError from './errorHandler/AppError';
+import { Request, Response, NextFunction } from 'express';
 
 dotenv();
 
@@ -57,5 +59,43 @@ const swaggerSpec = swaggerJSDoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/v1', profileRoute);
+
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404, 'not-found'));
+});
+
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    err.statusCode = err.statusCode || 500;
+
+    if (process.env.NODE_ENV === 'development') {
+        sendErrorDev(err, res);
+    } else if (process.env.NODE_ENV === 'production') {
+        sendErrorProd(err, res);
+    }
+});
+
+process.on('unhandledRejection', (err: any) => {
+    logger.log({
+        level: 'error',
+        message: `${err.name} - ${err.message}`,
+    });
+    logger.log({
+        level: 'info',
+        message: 'UNHANDLED REJECTION! 💥 Shutting down...',
+    });
+});
+
+process.on('uncaughtException', (err) => {
+    logger.log({
+        level: 'error',
+        message: `${err.name} - ${err.message}`,
+    });
+    logger.log({
+        level: 'info',
+        message: 'UNHANDLED REJECTION! 💥 Shutting down...',
+    });
+
+    process.exit(1);
+});
 
 export default app;

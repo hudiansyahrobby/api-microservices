@@ -1,3 +1,5 @@
+import AppError from '../errorHandler/AppError';
+
 const isValid = (schema: any, property: any) => {
     return (req: any, res: any, next: any) => {
         const { error } = schema.validate(req[property]);
@@ -7,14 +9,7 @@ const isValid = (schema: any, property: any) => {
         } else {
             const { details } = error;
             const message = details.map((i: any) => i.message).join(',');
-            return res.status(422).json({
-                message: message,
-                status: 422,
-                error: {
-                    message: message,
-                    type: 'validation-error',
-                },
-            });
+            return next(new AppError(message, 422, 'validation-error'));
         }
     };
 };

@@ -14,280 +14,126 @@ import {
     checkAuth,
 } from '../services/image.services';
 import { deleteImageOnCloudinary } from '../helpers/initCloudinary';
+import { catchAsync } from '../errorHandler/catchAsync';
+import AppError from '../errorHandler/AppError';
 
-export const prepareImages = async (req: Request, res: Response, next: NextFunction) => {
+export const prepareImages = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization;
-    try {
-        await checkAuth(token);
-        uploadFiles(req, res, (err: any) => {
-            if (err instanceof multer.MulterError) {
-                if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-                    return res.status(422).json({
-                        message: 'Too many files to upload. Max is 5 images',
-                        status: 422,
-                        error: {
-                            message: 'Too many files to upload. Max is 5 images',
-                            type: 'too-many-files',
-                        },
-                    });
-                }
-            } else if (err) {
-                logger.log({ level: 'error', message: err });
-                return res.status(422).json({
-                    message: err,
-                    status: 422,
-                    error: {
-                        message: err,
-                        type: 'bad-request',
-                    },
-                });
-            }
-            if (req.files.length === 0) {
-                return res.status(422).json({
-                    message: 'Upload at least one image',
-                    status: 422,
-                    error: {
-                        message: 'Upload at least one image',
-                        type: 'bad-request',
-                    },
-                });
-            }
 
-            next();
-        });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        if (error.response?.status === 403) {
-            return res.status(403).json({
-                message: error.response.data.message,
-                status: 403,
-                error: {
-                    message: error.response.data.message,
-                    type: error.response.data.type,
-                },
-            });
-        } else {
-            return res.status(500).json({
-                message: 'Internal Server Error',
-                status: 500,
-                error: {
-                    message: 'Internal server error',
-                    type: 'server-error',
-                },
-            });
+    await checkAuth(token);
+    uploadFiles(req, res, (err: any) => {
+        if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                return next(new AppError('Too many files to upload. Max is 5 images', 422, 'validation-error'));
+            }
+        } else if (err) {
+            return next(new AppError(err?.message, 400, 'bad-request'));
         }
-    }
-};
-
-export const resizeImages = async (req: Request, res: Response, next: NextFunction) => {
-    req.body.images = [];
-
-    try {
-        await Promise.all(
-            (req.files as any).map(async (file: any) => {
-                // Delete extension file name
-                const filename = file.originalname.replace(/\..+$/, '');
-
-                const newFilenameOnJPG = `${filename}-${Date.now()}.jpeg`;
-                const newFilenameOnWebp = `${filename}-${Date.now()}.webp`;
-
-                await sharp(file.buffer)
-                    .resize(640, 320)
-                    .toFormat('jpeg')
-                    .jpeg({ quality: 80 })
-                    .toFile(`public/${newFilenameOnJPG}`);
-
-                await sharp(file.buffer)
-                    .resize(640, 320)
-                    .toFormat('webp')
-                    .webp({ quality: 80 })
-                    .toFile(`public/${newFilenameOnWebp}`);
-
-                req.body.images.push(newFilenameOnJPG, newFilenameOnWebp);
-            }),
-        );
+        if (req.files.length === 0) {
+            return next(new AppError('Upload at least one image', 422, 'validation-error'));
+        }
 
         next();
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({
-            message: 'Internal Server Error',
-            status: 500,
-            error: {
-                message: 'Internal server error',
-                type: 'server-error',
-            },
-        });
-    }
-};
+    });
+});
 
-export const saveImages = async (req: Request, res: Response, next: NextFunction) => {
+export const resizeImages = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    req.body.images = [];
+    await Promise.all(
+        (req.files as any).map(async (file: any) => {
+            // Delete extension file name
+            const filename = file.originalname.replace(/\..+$/, '');
+
+            const newFilenameOnJPG = `${filename}-${Date.now()}.jpeg`;
+            const newFilenameOnWebp = `${filename}-${Date.now()}.webp`;
+
+            await sharp(file.buffer)
+                .resize(640, 320)
+                .toFormat('jpeg')
+                .jpeg({ quality: 80 })
+                .toFile(`public/${newFilenameOnJPG}`);
+
+            await sharp(file.buffer)
+                .resize(640, 320)
+                .toFormat('webp')
+                .webp({ quality: 80 })
+                .toFile(`public/${newFilenameOnWebp}`);
+
+            req.body.images.push(newFilenameOnJPG, newFilenameOnWebp);
+        }),
+    );
+
+    next();
+});
+
+export const saveImages = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { images } = req.body;
 
-    try {
-        const imageURLs = await uploadImages(images);
-        const imageIds = getPublicId(imageURLs);
+    const imageURLs = await uploadImages(images);
+    const imageIds = getPublicId(imageURLs);
 
-        const savedImages = [];
+    const savedImages = [];
 
-        for (let index = 0; index < imageURLs.length; index++) {
-            savedImages.push(
-                Image.create({ imageId: imageIds[index], imageUrl: imageURLs[index], productId: req.body.product_id }),
-            );
-        }
-
-        const _savedImages = await Promise.all(savedImages);
-
-        return res.status(201).json({ message: 'Image successfully saved', data: _savedImages, status: 201 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({
-            message: 'Internal Server Error',
-            status: 500,
-            error: {
-                message: 'Internal server error',
-                type: 'server-error',
-            },
-        });
+    for (let index = 0; index < imageURLs.length; index++) {
+        savedImages.push(
+            Image.create({ imageId: imageIds[index], imageUrl: imageURLs[index], productId: req.body.product_id }),
+        );
     }
-};
 
-export const getImageById = async (req: Request, res: Response, next: NextFunction) => {
+    const _savedImages = await Promise.all(savedImages);
+
+    return res.status(201).json({ message: 'Image successfully saved', data: _savedImages, status: 201 });
+});
+
+export const getImageById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    try {
-        const image = await findImageById(id);
+    const image = await findImageById(id);
 
-        if (!image) {
-            return res.status(404).json({
-                message: `Image with id ${id} not found`,
-                status: 404,
-                error: {
-                    message: `Image with id ${id} not found`,
-                    type: 'not-found',
-                },
-            });
-        }
-
-        return res.status(201).json({ message: 'OK', data: image, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({
-            message: 'Internal Server Error',
-            status: 500,
-            error: {
-                message: 'Internal server error',
-                type: 'server-error',
-            },
-        });
+    if (!image) {
+        return next(new AppError(`Image with id ${id} not found`, 404, 'not-found'));
     }
-};
 
-export const getImageByProductId = async (req: Request, res: Response, next: NextFunction) => {
+    return res.status(201).json({ message: 'OK', data: image, status: 200 });
+});
+
+export const getImageByProductId = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { productId } = req.params;
 
-    try {
-        const image = await findImageByProductId(productId);
+    const image = await findImageByProductId(productId);
 
-        return res.status(200).json({ message: 'OK', data: image, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({
-            message: 'Internal Server Error',
-            status: 500,
-            error: {
-                message: 'Internal server error',
-                type: 'server-error',
-            },
-        });
-    }
-};
+    return res.status(200).json({ message: 'OK', data: image, status: 200 });
+});
 
-export const deleteImageByProductId = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteImageByProductId = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { productId } = req.params;
     const token = req.headers.authorization;
 
-    try {
-        await checkAuth(token);
-        const images = await findImageByProductId(productId);
-        if (images.length === 0) {
-            return res.status(404).json({
-                message: `Image with product ID ${productId} not found`,
-                status: 404,
-                error: {
-                    message: `Image with product ID ${productId} not found`,
-                    type: 'not-found',
-                },
-            });
-        }
-        await destroyImageByProductId(productId);
-        return res.status(200).json({ message: 'OK', data: images, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        if (error.response?.status === 403) {
-            return res.status(403).json({
-                message: error.response.data.message,
-                status: 403,
-                error: {
-                    message: error.response.data.message,
-                    type: error.response.data.type,
-                },
-            });
-        } else {
-            return res.status(500).json({
-                message: 'Internal Server Error',
-                status: 500,
-                error: {
-                    message: 'Internal server error',
-                    type: 'server-error',
-                },
-            });
-        }
-    }
-};
+    await checkAuth(token);
+    const images = await findImageByProductId(productId);
 
-export const deleteImageById = async (req: Request, res: Response, next: NextFunction) => {
+    if (images.length === 0) {
+        return next(new AppError(`Image with product ID ${productId} not found`, 404, 'not-found'));
+    }
+
+    await destroyImageByProductId(productId);
+
+    return res.status(200).json({ message: 'OK', data: images, status: 200 });
+});
+
+export const deleteImageById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const token = req.headers.authorization;
-    try {
-        await checkAuth(token);
-        const image = await findImageById(id);
 
-        if (!image) {
-            return res.status(404).json({
-                message: 'Not Found',
-                status: 404,
-                error: {
-                    message: `Image with id ${id} not found`,
-                    type: 'Not Found',
-                },
-            });
-        }
+    await checkAuth(token);
+    const image = await findImageById(id);
 
-        await removeImageOnDB(id);
-        await deleteImageOnCloudinary(image.imageId);
-
-        return res.status(201).json({ message: 'Image successfully deleted', data: image, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        if (error.response?.status === 403) {
-            return res.status(403).json({
-                message: error.response.data.message,
-                status: 403,
-                error: {
-                    message: error.response.data.message,
-                    type: error.response.data.type,
-                },
-            });
-        } else {
-            return res.status(500).json({
-                message: 'Internal server error',
-                status: 500,
-                error: {
-                    message: 'Internal server error',
-                    type: 'Server error',
-                },
-            });
-        }
+    if (!image) {
+        return next(new AppError(`Image with id ${id} not found`, 404, 'not-found'));
     }
-};
+
+    await removeImageOnDB(id);
+    await deleteImageOnCloudinary(image.imageId);
+
+    return res.status(201).json({ message: 'Image successfully deleted', data: image, status: 200 });
+});

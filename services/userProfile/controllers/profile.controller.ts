@@ -1,4 +1,6 @@
-import { Response, Request } from 'express';
+import { Response, Request, NextFunction } from 'express';
+import AppError from '../errorHandler/AppError';
+import { catchAsync } from '../errorHandler/catchAsync';
 import { logger } from '../helpers/logger';
 import {
     checkAuth,
@@ -8,143 +10,77 @@ import {
     updateUserProfile,
 } from '../services/profile.services';
 
-export const createProfile = async (req: Request, res: Response) => {
-    try {
-        const uid = await checkAuth(req.headers.authorization);
+export const createProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const uid = await checkAuth(req.headers.authorization);
 
-        const userProfile = await getUserProfile(uid);
+    const userProfile = await getUserProfile(uid);
 
-        if (userProfile) {
-            return res.status(400).json({
-                message: 'User Profile has already exist',
-                status: 400,
-                error: {
-                    message: `User Profile with uid ${uid} is already exist`,
-                    type: 'Bad Request',
-                },
-            });
-        }
-
-        const newProfile = {
-            uid,
-            ...req.body,
-        };
-        const _newProfile = await createUserProfile(newProfile);
-        return res.status(201).json({ message: 'User Profile successfully created', data: _newProfile, status: 201 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal Server Error' });
+    if (userProfile) {
+        return next(new AppError('User Profile has already exist', 400, 'already-exist'));
     }
-};
 
-export const getProfileById = async (req: Request, res: Response) => {
+    const newProfile = {
+        uid,
+        ...req.body,
+    };
+    const _newProfile = await createUserProfile(newProfile);
+    return res.status(201).json({ message: 'User Profile successfully created', data: _newProfile, status: 201 });
+});
+
+export const getProfileById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { profileId } = req.params;
 
-    try {
-        const userProfile = await getUserProfile(profileId);
+    const userProfile = await getUserProfile(profileId);
 
-        if (!userProfile) {
-            return res.status(404).json({
-                message: 'Not Found',
-                status: 404,
-                error: {
-                    message: `User Profile with id ${profileId} not found`,
-                    type: 'Not Found',
-                },
-            });
-        }
-
-        return res.status(200).json({ message: 'OK', data: userProfile, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal Server Error' });
+    if (!userProfile) {
+        return next(new AppError(`User Profile with id ${profileId} not found`, 404, 'not-found'));
     }
-};
 
-export const getMyProfile = async (req: Request, res: Response) => {
-    try {
-        const uid = await checkAuth(req.headers.authorization);
+    return res.status(200).json({ message: 'OK', data: userProfile, status: 200 });
+});
 
-        const userProfile = await getUserProfile(uid);
+export const getMyProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const uid = await checkAuth(req.headers.authorization);
 
-        if (!userProfile) {
-            return res.status(404).json({
-                message: 'Not Found',
-                status: 404,
-                error: {
-                    message: `User Profile with id ${uid} not found`,
-                    type: 'Not Found',
-                },
-            });
-        }
+    const userProfile = await getUserProfile(uid);
 
-        return res.status(200).json({ message: 'OK', data: userProfile, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal Server Error' });
+    if (!userProfile) {
+        return next(new AppError(`Your profile not found`, 404, 'not-found'));
     }
-};
 
-export const updateProfile = async (req: Request, res: Response) => {
-    try {
-        const uid = await checkAuth(req.headers.authorization);
+    return res.status(200).json({ message: 'OK', data: userProfile, status: 200 });
+});
 
-        const userProfile = await getUserProfile(uid);
+export const updateProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const uid = await checkAuth(req.headers.authorization);
 
-        if (!userProfile) {
-            return res.status(404).json({
-                message: 'Not Found',
-                status: 404,
-                error: {
-                    message: `User Profile with uid ${uid} not found`,
-                    type: 'Not Found',
-                },
-            });
-        }
+    const userProfile = await getUserProfile(uid);
 
-        const updatedProfile = { ...req.body };
-
-        const _updatedUserProfile = await updateUserProfile(uid, updatedProfile);
-
-        return res
-            .status(200)
-            .json({ message: 'User profile updated successfully', data: _updatedUserProfile, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal Server Error' });
+    if (!userProfile) {
+        return next(new AppError(`User Profile with uid ${uid} not found`, 404, 'not-found'));
     }
-};
 
-export const deleteProfile = async (req: Request, res: Response) => {
-    try {
-        const uid = await checkAuth(req.headers.authorization);
+    const updatedProfile = { ...req.body };
 
-        const userProfile = await getUserProfile(uid);
+    const _updatedUserProfile = await updateUserProfile(uid, updatedProfile);
 
-        if (!userProfile) {
-            return res.status(404).json({
-                message: 'Not Found',
-                status: 404,
-                error: {
-                    message: `User Profile with uid ${uid} not found`,
-                    type: 'Not Found',
-                },
-            });
-        }
+    return res
+        .status(200)
+        .json({ message: 'User profile updated successfully', data: _updatedUserProfile, status: 200 });
+});
 
-        await deleteUserProfile(uid);
+export const deleteProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const uid = await checkAuth(req.headers.authorization);
 
-        return res.status(200).json({ message: 'User profile deleted successfully', data: userProfile, status: 200 });
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal Server Error' });
+    const userProfile = await getUserProfile(uid);
+
+    if (!userProfile) {
+        return next(new AppError(`User Profile with uid ${uid} not found`, 404, 'not-found'));
     }
-};
 
-export const searchUser = async (req: Request, res: Response) => {
-    try {
-    } catch (error) {
-        logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
+    await deleteUserProfile(uid);
+
+    return res.status(200).json({ message: 'User profile deleted successfully', data: userProfile, status: 200 });
+});
+
+export const searchUser = catchAsync(async (req: Request, res: Response) => {});

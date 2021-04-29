@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
@@ -6,9 +6,12 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import initDB from './helpers/initDB';
 import { config } from 'dotenv';
+import AppError from './errorHandler/AppError';
+import { sendErrorDev, sendErrorProd } from './errorHandler/errorResponse';
 
 // ROUTES
 import categoryRoute from './routes/category.route';
+import { logger } from './helpers/logger';
 
 config();
 const app = express();
@@ -52,6 +55,46 @@ const options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
+// TODO DB ERROR HANDLER
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404, 'not-found'));
+});
+
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    err.statusCode = err.statusCode || 500;
+
+    if (process.env.NODE_ENV === 'development') {
+        sendErrorDev(err, res);
+    } else if (process.env.NODE_ENV === 'production') {
+        sendErrorProd(err, res);
+    }
+});
+
+process.on('unhandledRejection', (err: any) => {
+    logger.log({
+        level: 'error',
+        message: `${err.name} - ${err.message}`,
+    });
+    logger.log({
+        level: 'info',
+        message: 'UNHANDLED REJECTION! 💥 Shutting down...',
+    });
+});
+
+process.on('uncaughtException', (err) => {
+    logger.log({
+        level: 'error',
+        message: `${err.name} - ${err.message}`,
+    });
+    logger.log({
+        level: 'info',
+        message: 'UNHANDLED REJECTION! 💥 Shutting down...',
+    });
+
+    process.exit(1);
+});
 
 export default app;
