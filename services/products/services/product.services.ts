@@ -86,7 +86,6 @@ export const getAllProducts = async (search: string, page: number, size: number,
     });
 
     products.rows = allProducts;
-
     const _products = getPaginationData(products, page, limit);
 
     return _products;
@@ -120,12 +119,22 @@ export const uploadProductImage = (
           }
         | Express.Multer.File[],
     productId: string,
+    token: string | undefined,
 ) => {
+    let headersConfig = {};
+
+    if (token) {
+        headersConfig = {
+            authorization: token,
+        };
+    }
+
     const form = new FormData();
     form.append('product_id', productId);
     form.append('images', fs.createReadStream(path.join(__dirname, '..', 'public', 'carbon.png')));
     const headers = {
         ...form.getHeaders(),
+        ...headersConfig,
     };
 
     return axios.post('http://172.25.0.8:8084/api/v1/images', form, { headers });
@@ -139,10 +148,38 @@ export const deleteImageById = (imageId: string) => {
     return axios.get(`http://172.25.0.8:8084/api/v1/images/${imageId}`);
 };
 
-export const deleteImageByProductId = (productId: string) => {
-    return axios.delete(`http://172.25.0.8:8084/api/v1/images/products/${productId}`);
+export const deleteImageByProductId = (productId: string, token: string | undefined) => {
+    let headersConfig = {};
+
+    if (token) {
+        headersConfig = {
+            authorization: token,
+        };
+    }
+    return axios.delete(`http://172.25.0.8:8084/api/v1/images/products/${productId}`, {
+        headers: headersConfig,
+    });
 };
 
 export const getCategoryById = (categoryId: string) => {
     return axios.get(`http://172.25.0.9:8085/api/v1/categories/${categoryId}`);
+};
+
+export const checkAuth = async (token: string | undefined) => {
+    let headersConfig = {};
+
+    if (token) {
+        headersConfig = {
+            authorization: token,
+        };
+    }
+    const response = await axios.post(
+        `http://172.25.0.2:8081/api/v1/auth/check-auth`,
+        {},
+        {
+            headers: headersConfig,
+        },
+    );
+    const uid = response.data.data.uid;
+    return uid;
 };

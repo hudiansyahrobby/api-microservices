@@ -7,8 +7,13 @@ const isValid = (schema: any, property: any) => {
         } else {
             const { details } = error;
             const message = details.map((i: any) => i.message).join(',');
-            res.status(422).json({
+            return res.status(422).json({
                 message: message,
+                status: 422,
+                error: {
+                    message: message,
+                    type: 'validation-error',
+                },
             });
         }
     };

@@ -1,5 +1,3 @@
-import { logger } from '../helpers/logger';
-
 const isValid = (schema: any, property: any) => {
     return (req: any, res: any, next: any) => {
         const { error } = schema.validate(req[property]);
@@ -9,12 +7,13 @@ const isValid = (schema: any, property: any) => {
         } else {
             const { details } = error;
             const message = details.map((i: any) => i.message).join(',');
-            logger.log({
-                level: 'info',
+            return res.status(422).json({
                 message: message,
-            });
-            res.status(422).json({
-                message: message,
+                status: 422,
+                error: {
+                    message: message,
+                    type: 'validation-error',
+                },
             });
         }
     };

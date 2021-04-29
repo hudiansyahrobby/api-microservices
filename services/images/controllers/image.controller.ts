@@ -48,7 +48,7 @@ export const prepareImages = async (req: Request, res: Response, next: NextFunct
                     status: 422,
                     error: {
                         message: 'Upload at least one image',
-                        type: 'no-image',
+                        type: 'bad-request',
                     },
                 });
             }
@@ -68,11 +68,11 @@ export const prepareImages = async (req: Request, res: Response, next: NextFunct
             });
         } else {
             return res.status(500).json({
-                message: 'Internal server error',
+                message: 'Internal Server Error',
                 status: 500,
                 error: {
                     message: 'Internal server error',
-                    type: 'Server error',
+                    type: 'server-error',
                 },
             });
         }
@@ -111,11 +111,11 @@ export const resizeImages = async (req: Request, res: Response, next: NextFuncti
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
-            message: 'Internal server error',
+            message: 'Internal Server Error',
             status: 500,
             error: {
                 message: 'Internal server error',
-                type: 'Server error',
+                type: 'server-error',
             },
         });
     }
@@ -142,11 +142,11 @@ export const saveImages = async (req: Request, res: Response, next: NextFunction
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
-            message: 'Internal server error',
+            message: 'Internal Server Error',
             status: 500,
             error: {
                 message: 'Internal server error',
-                type: 'Server error',
+                type: 'server-error',
             },
         });
     }
@@ -160,11 +160,11 @@ export const getImageById = async (req: Request, res: Response, next: NextFuncti
 
         if (!image) {
             return res.status(404).json({
-                message: 'Not Found',
+                message: `Image with id ${id} not found`,
                 status: 404,
                 error: {
                     message: `Image with id ${id} not found`,
-                    type: 'Not Found',
+                    type: 'not-found',
                 },
             });
         }
@@ -173,11 +173,11 @@ export const getImageById = async (req: Request, res: Response, next: NextFuncti
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
-            message: 'Internal server error',
+            message: 'Internal Server Error',
             status: 500,
             error: {
                 message: 'Internal server error',
-                type: 'Server error',
+                type: 'server-error',
             },
         });
     }
@@ -193,11 +193,11 @@ export const getImageByProductId = async (req: Request, res: Response, next: Nex
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
-            message: 'Internal server error',
+            message: 'Internal Server Error',
             status: 500,
             error: {
                 message: 'Internal server error',
-                type: 'Server error',
+                type: 'server-error',
             },
         });
     }
@@ -212,11 +212,11 @@ export const deleteImageByProductId = async (req: Request, res: Response, next: 
         const images = await findImageByProductId(productId);
         if (images.length === 0) {
             return res.status(404).json({
-                message: 'Not Found',
+                message: `Image with product ID ${productId} not found`,
                 status: 404,
                 error: {
                     message: `Image with product ID ${productId} not found`,
-                    type: 'Not Found',
+                    type: 'not-found',
                 },
             });
         }
@@ -235,11 +235,11 @@ export const deleteImageByProductId = async (req: Request, res: Response, next: 
             });
         } else {
             return res.status(500).json({
-                message: 'Internal server error',
+                message: 'Internal Server Error',
                 status: 500,
                 error: {
                     message: 'Internal server error',
-                    type: 'Server error',
+                    type: 'server-error',
                 },
             });
         }
