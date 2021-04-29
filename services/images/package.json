@@ -9,7 +9,7 @@
         "test": "cross-env NODE_ENV=test jest --testTimeout",
         "pretest": "cross-env NODE_ENV=test npm run migrate:reset && npm run seed-test",
         "migrate": "npx sequelize-cli db:migrate",
-        "migrate:reset": "npx sequelize-cli db:migrate:undo:all && npm run migrate && npm run seed",
+        "migrate:reset": "npx sequelize-cli db:migrate:undo:all && npm run migrate",
         "seed": "npx sequelize-cli db:seed:all --debug",
         "seed-test": "cross-env NODE_ENV=test npx sequelize-cli db:seed:all",
         "seed-reset": "npx sequelize-cli db:seed:undo:all && npm run seed",

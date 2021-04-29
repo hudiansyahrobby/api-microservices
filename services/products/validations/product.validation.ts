@@ -29,6 +29,12 @@ const product = {
             'string.max': 'description must not be greater than 1500 characters',
             'any.required': `description is a required field`,
         }),
+
+        categoryId: Joi.string().guid().required().messages({
+            'string.base': `categoryId must be a type of string`,
+            'string.empty': `categoryId cannot be an empty field`,
+            'any.required': `categoryId is a required field`,
+        }),
     }),
 };
 

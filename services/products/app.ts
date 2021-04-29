@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import initDB from './helpers/initDB';
 import { config } from 'dotenv';
+import path from 'path';
 
 // ROUTES
 import productRoute from './routes/product.route';
@@ -15,10 +16,9 @@ const app = express();
 
 initDB();
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
 app.use(
     cors({
         origin: process.env.CLIENT_URL,
@@ -43,7 +43,7 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:8000/api/v1',
+                url: 'http://localhost:8083/api/v1',
             },
         ],
     },

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { checkAuth } from '../middlewares/userAuth';
 
 import {
     registerFirebase,
@@ -10,6 +9,7 @@ import {
     logout,
     loginFacebook,
     revokeRefreshToken,
+    checkAuth,
 } from '../controllers/auth.controller';
 import isValid from '../middlewares/isValid';
 import AuthValidation from '../validations/auth.validation';
@@ -31,5 +31,7 @@ router.post('/auth/google-login', loginGoogle);
 router.post('/auth/refresh-token', revokeRefreshToken);
 
 router.post('/auth/logout', logout);
+
+router.post('/auth/check-auth', checkAuth);
 
 export default router;

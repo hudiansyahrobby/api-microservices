@@ -5,7 +5,7 @@ info:
   description: "API for APIKOM"
   version: "1.0.0"
 servers:
-  - url: http://localhost:8000/api/v1
+  - url: http://localhost:8083/api/v1
 paths: 
   /products:
     post:
@@ -147,6 +147,12 @@ components:
         description:
           type: string
           example: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. "
+        categoryId:
+          type: string
+          example: "46fda6af-6c3b-435d-aa5e-07214f6e3eef"
+        images: 
+          type: string
+          format: binary
   securitySchemes:
     bearerAuth:
       type: http

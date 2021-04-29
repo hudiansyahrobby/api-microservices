@@ -5,9 +5,9 @@ info:
   description: "API for APIKOM"
   version: "1.0.0"
 servers:
-  - url: http://localhost:8000/api/v1
+  - url: http://localhost:8081/api/v1
 paths:
-  /login/oauth2-login:
+  /auth/google-login:
     post:
       description: "Login with facebook"
       tags:
@@ -23,7 +23,7 @@ paths:
           description: "User successfully login"
 
 
-  /register/firebase-register:
+  /auth/firebase-register:
     post:
       description: "Register with email"
       tags:
@@ -41,7 +41,7 @@ paths:
           description: Validation error
         '500':
           description: Server Error
-  /login/firebase-login:
+  /auth/firebase-login:
     post:
       description: "Login with Email"
       tags:
@@ -62,7 +62,7 @@ paths:
       responses:
         '200':
           description: Login successfully
-  /register/username-register:
+  /auth/username-register:
     post:
       description: "Register with email"
       tags:
@@ -80,7 +80,7 @@ paths:
           description: Validation error
         '500':
           description: Server Error
-  /login/username-login:
+  /auth/username-login:
     post:
       description: "Login with Username"
       tags:
@@ -102,7 +102,7 @@ paths:
         '200':
           description: User successfully login
 
-  /login/facebook-login:
+  /auth/facebook-login:
     post:
       description: "Login with facebook"
       tags:
@@ -116,7 +116,7 @@ paths:
       responses:
         '200':
           description: User successfully login
-  /refresh-token:
+  /auth/refresh-token:
     post:
       description: "Revoke Refresh Token"
       tags:
@@ -134,15 +134,24 @@ paths:
       responses:
         '200':
           description: Refresh token revoked successfully
-  /logout:
+  /auth/logout:
     post:
       tags:
         - Authentication
       summary: Logout
-      description: ''
       responses:
         '200':
           description: Signout successfully
+  /auth/check-auth:
+    post:
+      tags:
+        - Authentication
+      summary: Check Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User authenticated
 components:
   schemas:
     UserWithUsername:
@@ -198,3 +207,9 @@ components:
         token:
           type: string
           example: "aduwudhuwhduw"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

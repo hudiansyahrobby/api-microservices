@@ -1,6 +1,7 @@
 import Category from '../models/category.model';
 import CategoryType from '../interfaces/Category';
 import { Op } from 'sequelize';
+import axios from 'axios';
 
 export const createCategory = (name: string) => {
     return Category.findOrCreate({
@@ -28,8 +29,6 @@ export const findAllCategories = () => {
 };
 
 export const updateCategoryById = (updatedCategory: CategoryType, id: string) => {
-    console.log(updatedCategory);
-    console.log(id);
     return Category.update(updatedCategory, {
         where: {
             id,
@@ -44,4 +43,28 @@ export const deleteCategoryById = (id: string) => {
             id,
         },
     });
+};
+
+export const getCategoryById = (id: string) => {
+    return id;
+};
+
+export const checkAuth = async (token: string | undefined) => {
+    let headersConfig = {};
+
+    if (token) {
+        headersConfig = {
+            authorization: token,
+        };
+    }
+    const response = await axios.post(
+        `http://172.25.0.6:8081/api/v1/auth/check-auth`,
+        {},
+        {
+            headers: headersConfig,
+        },
+    );
+    console.log('HAHAHA');
+    const uid = response.data.data.uid;
+    return uid;
 };

@@ -1,14 +1,116 @@
 version: '3.7'
 services:
+  profile_db:
+      image: postgres
+      environment:
+        POSTGRES_PASSWORD: mysecretpassword
+        POSTGRES_USER: postgres
+        POSTGRES_DB: userprofile
+      volumes:
+        - ./profile_pgdata:/var/lib/postgresql/data
+      ports:
+        - "5432:5432"
+      networks:
+        - proxynet
+  products_db:
+      image: postgres
+      environment:
+        POSTGRES_PASSWORD: mysecretpassword
+        POSTGRES_USER: postgres
+        POSTGRES_DB: products
+      volumes:
+        - ./product_pgdata:/var/lib/postgresql/data
+      ports:
+        - "5431:5432"
+      networks:
+        - proxynet
+  images_db:
+      image: postgres
+      environment:
+        POSTGRES_PASSWORD: mysecretpassword
+        POSTGRES_USER: postgres
+        POSTGRES_DB: images
+      volumes:
+        - ./image_pgdata:/var/lib/postgresql/data
+      ports:
+        - "5430:5432"
+      networks:
+        - proxynet
+  categories_db:
+      image: postgres
+      environment:
+        POSTGRES_PASSWORD: mysecretpassword
+        POSTGRES_USER: postgres
+        POSTGRES_DB: categories
+      volumes:
+        - ./categories_pgdata:/var/lib/postgresql/data
+      ports:
+        - "5429:5432"
+      networks:
+        - proxynet
   authentication:
-    build: './authentication'
+      build:
+        context: ./authentication/
+      image: apikom_authentication
+      volumes:
+      - ./authentication/:/usr/src/app
+      ports:
+        - "8081:8081"
+      networks:
+        - proxynet
+  userprofile:
+    build:
+      context: ./userProfile/
+    image: apikom_userprofile
+    volumes:
+      - ./userProfile/:/usr/src/app
+    command: bash -c "npm run migrate:reset && npm run dev"
+    depends_on: 
+      - profile_db
     ports:
       - "8082:8082"
-  nginx:
-    image: nginx:latest
-    ports:
-      - "8080:8080"
+    networks:
+      - proxynet
+  products:
+    build:
+      context: ./products/
+    image: apikom_products
     volumes:
-      - ./default.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - authentication
+      - ./products/:/usr/src/app
+    command: bash -c "npm run migrate:reset && npm run dev"
+    depends_on: 
+      - products_db
+    ports:
+      - "8083:8083"
+    networks:
+      - proxynet
+  images:
+    build:
+      context: ./images/
+    image: apikom_images
+    volumes:
+      - ./images/:/usr/src/app
+    command: bash -c "npm run migrate:reset && npm run dev"
+    depends_on: 
+      - images_db
+    ports:
+      - "8084:8084"
+    networks:
+      - proxynet
+  categories:
+    build:
+      context: ./categories/
+    image: apikom_categories
+    volumes:
+      - ./categories/:/usr/src/app
+    command: bash -c "npm run migrate:reset && npm run dev"
+    depends_on: 
+      - categories_db
+    ports:
+      - "8085:8085"
+    networks:
+      - proxynet
+networks:
+  proxynet:
+    name: custom_network
+  

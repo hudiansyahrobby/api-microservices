@@ -17,6 +17,10 @@ module.exports = {
                 type: Sequelize.STRING(100),
                 allowNull: false,
             },
+            productId: {
+                type: Sequelize.STRING(40),
+                allowNull: false,
+            },
         });
     },
 

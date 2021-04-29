@@ -2,14 +2,16 @@ FROM node:15.10.0-buster as base
 
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install
+RUN npm install --verbose
 COPY . .
 RUN npm run build
-EXPOSE 8082
+EXPOSE 8000
 
 FROM base as production
 RUN npm ci
 CMD ["node", "src/index.js"]
 
 FROM base as dev
+RUN npm i -g nodemon
 CMD ["npm", "run", "dev"]
+

@@ -8,6 +8,7 @@ import {
     loginWithFacebook,
     logoutUser,
     loginWithGoogle,
+    verifyToken,
 } from '../services/auth.services';
 
 export const registerFirebase = async (req: Request, res: Response) => {
@@ -60,6 +61,7 @@ export const registerFirebase = async (req: Request, res: Response) => {
 
 export const loginFirebase = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
+
     try {
         const user = await loginUser(email, password);
 
@@ -281,5 +283,60 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
                 type: 'server-error',
             },
         });
+    }
+};
+
+export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
+    const bearerToken = req.headers.authorization;
+    try {
+        if (!bearerToken) {
+            return res.status(403).json({
+                message: 'Token does not exist on headers',
+                status: 403,
+                error: {
+                    message: 'Token does not exist on headers',
+                    type: 'forbidden',
+                },
+            });
+        }
+        const accessToken: string = bearerToken.split(' ')[1];
+        if (!accessToken) {
+            return res.status(403).json({
+                message: 'Access denied, Token does not well formatted',
+                status: 403,
+                error: {
+                    message: 'Token does not well formatted',
+                    type: 'forbidden',
+                },
+            });
+        }
+        const user = await verifyToken(accessToken);
+
+        return res.status(200).json({
+            message: 'Token is valid',
+            status: 200,
+            data: user,
+        });
+    } catch (error) {
+        logger.log({ level: 'error', message: error.message });
+        if (error.code === 'auth/argument-error') {
+            return res.status(403).json({
+                message: 'Access Token is not valid',
+                status: 403,
+                error: {
+                    message: 'Access Token is not valid',
+                    type: 'forbidden',
+                },
+            });
+        } else {
+            return res.status(500).json({
+                message: 'Internal server error',
+                status: 500,
+                error: {
+                    message: 'Internal server error',
+                    type: 'server-error',
+                },
+            });
+        }
     }
 };

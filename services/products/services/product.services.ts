@@ -1,5 +1,16 @@
 import Product from '../models/product.model';
-import ProductType from '../interfaces/Product';
+import { ProductType } from '../types/ProductType';
+import { Op } from 'sequelize';
+import { getPagination } from '../helpers/getPagination';
+import { getSort } from '../helpers/getSort';
+import { getPaginationData } from '../helpers/getPaginationData';
+import axios, { AxiosResponse } from 'axios';
+import { config } from 'dotenv';
+import FormData from 'form-data';
+import fs from 'fs';
+import path from 'path';
+
+config();
 
 export const getProductbyId = (id: string) => {
     return Product.findOne({
@@ -15,13 +26,70 @@ export const createBulkProducts = (newProducts: ProductType[]) => {
     return Product.bulkCreate(newProducts, { returning: true });
 };
 
-export const getAllProducts = (searchCondition: any, limit: number, offset: number, orderBy: any) => {
-    return Product.findAndCountAll({
+export const getAllProducts = async (search: string, page: number, size: number, sort: string) => {
+    const searchCondition = search
+        ? {
+              [Op.or]: [
+                  {
+                      name: { [Op.iLike]: `%${search}%` },
+                  },
+                  {
+                      description: { [Op.iLike]: `%${search}%` },
+                  },
+              ],
+          }
+        : undefined;
+
+    const { limit, offset } = getPagination(page, size);
+
+    const orderBy = !!sort ? getSort(sort) : ['createdAt', 'DESC'];
+
+    const products = await Product.findAndCountAll({
         where: searchCondition,
         limit,
         offset,
         order: [orderBy as any],
+        raw: true,
     });
+
+    const allCategories: Promise<AxiosResponse<any>>[] = [];
+    const allImages: Promise<AxiosResponse<any>>[] = [];
+
+    products.rows.map((product) => {
+        allCategories.push(getCategoryById(product.categoryId));
+        allImages.push(getImageByProductId(product.id));
+    });
+
+    const allCategoryPromises = Promise.all(allCategories);
+    const categories = await allCategoryPromises;
+
+    const allImagePromises = Promise.all(allImages);
+    const images = await allImagePromises;
+
+    type imageObj = {
+        id: string;
+        imageId: string;
+        imageUrl: string;
+        productId: string;
+    };
+
+    type ProductType = Product & {
+        categoryName?: string;
+        images?: imageObj[];
+    };
+
+    const allProducts = products.rows.map((product, index) => {
+        let _product: ProductType = product;
+        _product.categoryName = categories[index].data.data.name;
+        _product.images = images[index].data.data;
+        return _product;
+    });
+
+    products.rows = allProducts;
+
+    const _products = getPaginationData(products, page, limit);
+
+    return _products;
 };
 
 export const getProductByCategory = (categoryId: string, limit: number, offset: number, orderBy: any) => {
@@ -43,4 +111,38 @@ export const deleteProductById = (id: string) => {
     return Product.destroy({
         where: { id },
     });
+};
+
+export const uploadProductImage = (
+    images:
+        | {
+              [fieldname: string]: Express.Multer.File[];
+          }
+        | Express.Multer.File[],
+    productId: string,
+) => {
+    const form = new FormData();
+    form.append('product_id', productId);
+    form.append('images', fs.createReadStream(path.join(__dirname, '..', 'public', 'carbon.png')));
+    const headers = {
+        ...form.getHeaders(),
+    };
+
+    return axios.post('http://172.25.0.8:8084/api/v1/images', form, { headers });
+};
+
+export const getImageByProductId = (productId: string) => {
+    return axios.get(`http://172.25.0.8:8084/api/v1/images/products/${productId}`);
+};
+
+export const deleteImageById = (imageId: string) => {
+    return axios.get(`http://172.25.0.8:8084/api/v1/images/${imageId}`);
+};
+
+export const deleteImageByProductId = (productId: string) => {
+    return axios.delete(`http://172.25.0.8:8084/api/v1/images/products/${productId}`);
+};
+
+export const getCategoryById = (categoryId: string) => {
+    return axios.get(`http://172.25.0.9:8085/api/v1/categories/${categoryId}`);
 };

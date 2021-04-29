@@ -15,4 +15,7 @@ export default class Image extends Model {
 
     @Column(DataType.STRING(100))
     imageUrl: string;
+
+    @Column(DataType.UUIDV4)
+    productId: any;
 }

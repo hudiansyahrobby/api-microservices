@@ -32,7 +32,7 @@ const sequelize = new Sequelize({
     ...sequelizeConfig,
     dialect: 'postgres',
     port: 5432,
-    host: 'db',
+    host: 'products_db',
     models: [path.join(__dirname, '..', 'models', '**')],
     // query: {
     //     raw: true,

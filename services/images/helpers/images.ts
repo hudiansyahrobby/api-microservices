@@ -7,7 +7,6 @@ export const uploadImages = async (files: Array<string>): Promise<Array<string>>
     for (const file of files) {
         const path = `public/${file}`;
         const newPath = await uploadToCloudinary(path);
-        console.log('NEW PATH', newPath);
         imageURL.push(newPath as string);
         fs.unlinkSync(path);
     }

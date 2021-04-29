@@ -20,4 +20,7 @@ export default class Product extends Model {
 
     @Column(DataType.TEXT)
     description: string;
+
+    @Column(DataType.UUIDV4)
+    categoryId: any;
 }

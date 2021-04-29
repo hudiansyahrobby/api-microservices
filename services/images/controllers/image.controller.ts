@@ -6,21 +6,48 @@ import { uploadImages } from '../helpers/images';
 import { logger } from '../helpers/logger';
 import Image from '../models/image.model';
 import { getPublicId } from '../helpers/getPublicId';
-import { findImageById, removeImageOnDB } from '../services/image.services';
+import {
+    findImageById,
+    findImageByProductId,
+    removeImageOnDB,
+    destroyImageByProductId,
+} from '../services/image.services';
 import { deleteImageOnCloudinary } from '../helpers/initCloudinary';
 
 export const prepareImages = (req: Request, res: Response, next: NextFunction) => {
     uploadFiles(req, res, (err: any) => {
+        console.log(req.body.images);
         if (err instanceof multer.MulterError) {
             if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-                return res.status(422).json({ message: 'Too many files to upload. Max is 5 images' });
+                return res.status(422).json({
+                    message: 'Too many files to upload. Max is 5 images',
+                    status: 422,
+                    error: {
+                        message: 'Too many files to upload. Max is 5 images',
+                        type: 'too-many-files',
+                    },
+                });
             }
         } else if (err) {
-            return res.status(400).json({ message: err });
+            logger.log({ level: 'error', message: err });
+            return res.status(422).json({
+                message: err,
+                status: 422,
+                error: {
+                    message: err,
+                    type: 'bad-request',
+                },
+            });
         }
-
         if (req.files.length === 0) {
-            return res.status(422).json({ message: 'Upload at least one image' });
+            return res.status(422).json({
+                message: 'Upload at least one image',
+                status: 422,
+                error: {
+                    message: 'Upload at least one image',
+                    type: 'no-image',
+                },
+            });
         }
 
         next();
@@ -28,8 +55,6 @@ export const prepareImages = (req: Request, res: Response, next: NextFunction) =
 };
 
 export const resizeImages = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.files) return next();
-
     req.body.images = [];
 
     try {
@@ -60,7 +85,14 @@ export const resizeImages = async (req: Request, res: Response, next: NextFuncti
         next();
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({
+            message: 'Internal server error',
+            status: 500,
+            error: {
+                message: 'Internal server error',
+                type: 'Server error',
+            },
+        });
     }
 };
 
@@ -74,15 +106,24 @@ export const saveImages = async (req: Request, res: Response, next: NextFunction
         const savedImages = [];
 
         for (let index = 0; index < imageURLs.length; index++) {
-            savedImages.push(Image.create({ imageId: imageIds[index], imageUrl: imageURLs[index] }));
+            savedImages.push(
+                Image.create({ imageId: imageIds[index], imageUrl: imageURLs[index], productId: req.body.product_id }),
+            );
         }
 
         const _savedImages = await Promise.all(savedImages);
 
-        return res.status(201).json({ message: 'Image successfully uploaded', savedImages: _savedImages });
+        return res.status(201).json({ message: 'Image successfully saved', data: _savedImages, status: 201 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({
+            message: 'Internal server error',
+            status: 500,
+            error: {
+                message: 'Internal server error',
+                type: 'Server error',
+            },
+        });
     }
 };
 
@@ -93,13 +134,66 @@ export const getImageById = async (req: Request, res: Response, next: NextFuncti
         const image = await findImageById(id);
 
         if (!image) {
-            return res.status(404).json({ message: 'Image not found' });
+            return res.status(404).json({
+                message: 'Not Found',
+                status: 404,
+                error: {
+                    message: `Image with id ${id} not found`,
+                    type: 'Not Found',
+                },
+            });
         }
 
-        return res.status(200).json({ image });
+        return res.status(201).json({ message: 'OK', data: image, status: 200 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({
+            message: 'Internal server error',
+            status: 500,
+            error: {
+                message: 'Internal server error',
+                type: 'Server error',
+            },
+        });
+    }
+};
+
+export const getImageByProductId = async (req: Request, res: Response, next: NextFunction) => {
+    const { productId } = req.params;
+
+    try {
+        const image = await findImageByProductId(productId);
+
+        return res.status(200).json({ message: 'OK', data: image, status: 200 });
+    } catch (error) {
+        logger.log({ level: 'error', message: error.message });
+        return res.status(500).json({
+            message: 'Internal server error',
+            status: 500,
+            error: {
+                message: 'Internal server error',
+                type: 'Server error',
+            },
+        });
+    }
+};
+
+export const deleteImageByProductId = async (req: Request, res: Response, next: NextFunction) => {
+    const { productId } = req.params;
+
+    try {
+        const image = await destroyImageByProductId(productId);
+        return res.status(200).json({ message: 'OK', data: image, status: 200 });
+    } catch (error) {
+        logger.log({ level: 'error', message: error.message });
+        return res.status(500).json({
+            message: 'Internal server error',
+            status: 500,
+            error: {
+                message: 'Internal server error',
+                type: 'Server error',
+            },
+        });
     }
 };
 
@@ -110,15 +204,29 @@ export const deleteImageById = async (req: Request, res: Response, next: NextFun
         const image = await findImageById(id);
 
         if (!image) {
-            return res.status(404).json({ message: 'Image not found' });
+            return res.status(404).json({
+                message: 'Not Found',
+                status: 404,
+                error: {
+                    message: `Image with id ${id} not found`,
+                    type: 'Not Found',
+                },
+            });
         }
 
         await removeImageOnDB(id);
         await deleteImageOnCloudinary(image.imageId);
 
-        return res.status(200).json({ message: 'Image successfully deleted', image });
+        return res.status(201).json({ message: 'Image successfully deleted', data: image, status: 201 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({
+            message: 'Internal server error',
+            status: 500,
+            error: {
+                message: 'Internal server error',
+                type: 'Server error',
+            },
+        });
     }
 };

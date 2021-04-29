@@ -1,7 +1,7 @@
 import app from './app';
 import { logger } from './helpers/logger';
 
-const PORT = process.env.PORT || 8082;
+const PORT = process.env.PORT || 8081;
 
 app.listen(PORT, () =>
     logger.log({

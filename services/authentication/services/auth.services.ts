@@ -46,3 +46,12 @@ export const loginWithGoogle = async (token: string) => {
 export const logoutUser = async () => {
     return firebase.auth().signOut();
 };
+
+export const verifyToken = async (token: string) => {
+    const { uid } = await admin.auth().verifyIdToken(token);
+    return getUserByUID(uid);
+};
+
+export const getUserByUID = async (uid: string) => {
+    return admin.auth().getUser(uid);
+};

@@ -1,8 +1,4 @@
-import { Request, Response } from 'express';
-import { Op } from 'sequelize';
-import { getPagination } from '../helpers/getPagination';
-import { getPaginationData } from '../helpers/getPaginationData';
-import { getSort } from '../helpers/getSort';
+import { NextFunction, Request, Response } from 'express';
 import {
     createProduct,
     getAllProducts,
@@ -10,21 +6,39 @@ import {
     updateProductById,
     deleteProductById,
     createBulkProducts,
+    uploadProductImage,
+    getCategoryById,
+    getImageByProductId,
+    deleteImageByProductId,
 } from '../services/product.services';
-import ProductType from '../interfaces/Product';
+import { ProductType } from '../types/ProductType';
 import { logger } from '../helpers/logger';
+import uploadFiles from '../helpers/initMulter';
 
-export const create = async (req: any, res: Response) => {
-    // const { categories, ...data } = req.body;
+export const prepareImages = (req: Request, res: Response, next: NextFunction) => {
+    uploadFiles(req, res, (err: any) => {
+        next();
+    });
+};
 
+export const create = async (req: Request, res: Response) => {
+    const { categoryId } = req.body;
     try {
         const newProduct: ProductType = {
             ...req.body,
         };
+        const category = await getCategoryById(categoryId);
+        const product = await createProduct(newProduct);
+        const images = await uploadProductImage(req.files, product.id);
 
-        const createdProduct = await createProduct(newProduct);
+        product.setDataValue('images', images.data.data);
+        product.setDataValue('categoryName', category.data.data.name);
 
-        return res.status(201).json({ message: 'Created', data: createdProduct, status: 201 });
+        return res.status(201).json({
+            message: 'Product successfully created',
+            data: { product: product },
+            status: 201,
+        });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
@@ -38,14 +52,14 @@ export const create = async (req: any, res: Response) => {
     }
 };
 
-export const createBulk = async (req: any, res: Response) => {
+export const createBulk = async (req: Request, res: Response) => {
     try {
         const newProducts: ProductType[] = {
             ...req.body,
         };
 
         const createdProducts = await createBulkProducts(newProducts);
-        return res.status(201).json({ message: 'Created', data: createdProducts, status: 201 });
+        return res.status(201).json({ message: 'Products successfully created', data: createdProducts, status: 201 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
         return res.status(500).json({
@@ -65,38 +79,22 @@ export const getProducts = async (req: Request, res: Response) => {
     const _page = parseInt(page as string);
     const _size = parseInt(size as string);
 
-    const { limit, offset } = getPagination(_page, _size);
-
-    // TODO : SEARCH BY CATEGORY
-    const searchCondition = search
-        ? {
-              [Op.or]: [
-                  {
-                      name: { [Op.iLike]: `%${search}%` },
-                  },
-                  {
-                      description: { [Op.iLike]: `%${search}%` },
-                  },
-              ],
-          }
-        : undefined;
-    const orderBy = !!sort ? getSort(sort as string) : ['createdAt', 'DESC'];
-    // const categoryCondition = categoryId ? { id: categoryId } : undefined;
-
     try {
-        // const response = await getAllProducts(searchCondition, limit, offset, orderBy, categoryCondition);
-        const response = await getAllProducts(searchCondition, limit, offset, orderBy);
-
-        const products = getPaginationData(response, _page, limit);
+        const { results, totalItems, totalPages, limit } = await getAllProducts(
+            search as string,
+            _page,
+            _size,
+            sort as string,
+        );
 
         return res.status(200).json({
             message: 'OK',
-            data: products.results,
+            data: results,
             status: 200,
             meta: {
-                count: products.totalItems,
-                load: products.results.length,
-                page: products.totalPages,
+                count: totalItems,
+                load: results.length,
+                page: totalPages,
                 offset: limit,
             },
         });
@@ -130,6 +128,11 @@ export const getDetail = async (req: Request, res: Response) => {
             });
         }
 
+        const category = await getCategoryById(product.categoryId);
+        const images = await getImageByProductId(productId);
+        product.setDataValue('categoryName', category.data.data.name);
+        product.setDataValue('images', images.data.data);
+
         return res.status(200).json({ message: 'OK', data: product, status: 200 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
@@ -143,7 +146,8 @@ export const getDetail = async (req: Request, res: Response) => {
         });
     }
 };
-export const update = async (req: any, res: Response) => {
+
+export const update = async (req: Request, res: Response) => {
     const { productId } = req.params;
 
     try {
@@ -164,9 +168,27 @@ export const update = async (req: any, res: Response) => {
             ...req.body,
         };
 
+        // DELETE IMAGES
+        await deleteImageByProductId(productId);
         await updateProductById(productData, productId);
-
+        const images = await uploadProductImage(req.files, productId);
         const updatedProduct = await getProductbyId(productId);
+
+        if (!updatedProduct) {
+            return res.status(404).json({
+                message: 'Not Found',
+                status: 404,
+                error: {
+                    message: `Product with id ${productId} not found`,
+                    type: 'Not Found',
+                },
+            });
+        }
+
+        const category = await getCategoryById(productData.categoryId);
+        updatedProduct.setDataValue('images', images.data.data);
+        updatedProduct.setDataValue('categoryName', category.data.data.name);
+
         return res.status(200).json({ message: 'Product updated successfully', data: updatedProduct, status: 200 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });
@@ -199,7 +221,7 @@ export const remove = async (req: Request, res: Response) => {
         }
 
         await deleteProductById(productId);
-
+        await deleteImageByProductId(productId);
         return res.status(200).json({ message: 'Product Removed Successfully', data: product, status: 200 });
     } catch (error) {
         logger.log({ level: 'error', message: error.message });

@@ -1,4 +1,4 @@
-import Product from '../interfaces/Product';
+import Product from '../types/ProductType';
 
 interface ProductData {
     rows: Product[];
@@ -10,5 +10,5 @@ export const getPaginationData = (data: ProductData, page: number, limit: number
     const currentPage = page ? +page : 0;
     const totalPages = Math.ceil(totalItems / limit);
 
-    return { totalItems, totalPages, results, currentPage };
+    return { totalItems, totalPages, results, currentPage, limit };
 };
