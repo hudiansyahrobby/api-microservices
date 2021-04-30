@@ -63,11 +63,11 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
 
     const updatedProfile = { ...req.body };
 
-    const _updatedUserProfile = await updateUserProfile(uid, updatedProfile);
+    const [, _updatedUserProfile] = await updateUserProfile(uid, updatedProfile);
 
     return res
         .status(200)
-        .json({ message: 'User profile updated successfully', data: _updatedUserProfile, status: 200 });
+        .json({ message: 'User profile updated successfully', data: _updatedUserProfile[0], status: 200 });
 });
 
 export const deleteProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

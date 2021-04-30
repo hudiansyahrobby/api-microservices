@@ -43,27 +43,8 @@ paths:
           description: "Not Found"
         500:
           description: "Server Error"
-  /user-profile/{profileId}:
-    get:
-      description: "Get user profile detail"
-      parameters:
-        - in: path
-          required: true
-          name: profileId
-          schema:
-            type: string
-          description: Get user profile by id  
-      tags:
-        - "UserProfile"
-      responses:
-        200:
-          description: "OK"
-        404:
-          description: "User profile not found"
-        500:
-          description: "Server Error"
     put:
-      description: "update user profile by id"
+      description: "update your profile"
       tags:
         - "UserProfile"
       parameters:
@@ -72,7 +53,7 @@ paths:
         name: profileId
         schema:
           type: string
-        description: update user profile detail by id  
+        description: update your profile  
       security:
         - bearerAuth: []
       requestBody:
@@ -111,6 +92,25 @@ paths:
           description: "OK"
         404:
           description: "Product not found"
+        500:
+          description: "Server Error"
+  /user-profile/{profileId}:
+    get:
+      description: "Get user profile detail"
+      parameters:
+        - in: path
+          required: true
+          name: profileId
+          schema:
+            type: string
+          description: Get user profile by UID
+      tags:
+        - "UserProfile"
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "User profile not found"
         500:
           description: "Server Error"
 components:
