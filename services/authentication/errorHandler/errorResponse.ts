@@ -2,23 +2,22 @@ import { Response } from 'express';
 import { logger } from '../helpers/logger';
 
 export const sendErrorDev = (err: any, res: Response) => {
-    res.status(err.statusCode).json({
+    res.status(err.status).json({
         message: err.message,
-        status: err.statusCode,
+        status: err.status,
         error: {
             message: err.message,
             type: err.type,
         },
         stack: err.stack,
-        fullError: err,
     });
 };
 
 export const sendErrorProd = (err: any, res: Response) => {
     if (err.isOperational) {
-        res.status(err.statusCode).json({
+        res.status(err.status).json({
             message: err.message,
-            status: err.statusCode,
+            status: err.status,
             error: {
                 message: err.message,
                 type: err.type,

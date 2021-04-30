@@ -58,7 +58,7 @@ export const checkAuth = async (token: string | undefined) => {
         };
     }
     const response = await axios.post(
-        `http://172.25.0.6:8081/api/v1/auth/check-auth`,
+        `http://172.25.0.5:8081/api/v1/auth/check-auth`,
         {},
         {
             headers: headersConfig,

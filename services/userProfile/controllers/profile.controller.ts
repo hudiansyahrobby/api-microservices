@@ -1,7 +1,6 @@
 import { Response, Request, NextFunction } from 'express';
 import AppError from '../errorHandler/AppError';
 import { catchAsync } from '../errorHandler/catchAsync';
-import { logger } from '../helpers/logger';
 import {
     checkAuth,
     createUserProfile,
@@ -11,7 +10,8 @@ import {
 } from '../services/profile.services';
 
 export const createProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const uid = await checkAuth(req.headers.authorization);
+    const token = req.headers.authorization;
+    const uid = await checkAuth(token);
 
     const userProfile = await getUserProfile(uid);
 
@@ -40,7 +40,8 @@ export const getProfileById = catchAsync(async (req: Request, res: Response, nex
 });
 
 export const getMyProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const uid = await checkAuth(req.headers.authorization);
+    const token = req.headers.authorization;
+    const uid = await checkAuth(token);
 
     const userProfile = await getUserProfile(uid);
 
@@ -52,8 +53,8 @@ export const getMyProfile = catchAsync(async (req: Request, res: Response, next:
 });
 
 export const updateProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const uid = await checkAuth(req.headers.authorization);
-
+    const token = req.headers.authorization;
+    const uid = await checkAuth(token);
     const userProfile = await getUserProfile(uid);
 
     if (!userProfile) {
@@ -70,7 +71,8 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
 });
 
 export const deleteProfile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const uid = await checkAuth(req.headers.authorization);
+    const token = req.headers.authorization;
+    const uid = await checkAuth(token);
 
     const userProfile = await getUserProfile(uid);
 

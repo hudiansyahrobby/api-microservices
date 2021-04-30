@@ -33,17 +33,20 @@ export const deleteUserProfile = async (uid: string) => {
 };
 
 export const checkAuth = async (token: string | undefined) => {
-    const { data } = await axios.post(
-        `${process.env.SERVICE_AUTH}/api/v1/auth/check-auth`,
+    let headersConfig = {};
+    if (token) {
+        headersConfig = {
+            authorization: token,
+        };
+    }
+    const response = await axios.post(
+        `http://172.25.0.5:8081/api/v1/auth/check-auth`,
         {},
         {
-            headers: {
-                authorization: token,
-            },
+            headers: headersConfig,
         },
     );
-
-    const uid = data.data.uid;
+    const uid = response.data.data.uid;
     return uid;
 };
 

@@ -65,12 +65,25 @@ app.all('*', (req, res, next) => {
 });
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    err.statusCode = err.statusCode || 500;
-
     if (process.env.NODE_ENV === 'development') {
-        sendErrorDev(err, res);
+        if (err?.response) {
+            logger.log({ level: 'error', message: err.response.data.message });
+            sendErrorDev(err.response.data, res);
+        } else {
+            console.log(err);
+            logger.log({ level: 'error', message: err.message });
+            err.status = err.status || 500;
+            sendErrorDev(err, res);
+        }
     } else if (process.env.NODE_ENV === 'production') {
-        sendErrorProd(err, res);
+        if (err?.response) {
+            logger.log({ level: 'error', message: err.response.data.message });
+            sendErrorProd(err.response.data, res);
+        } else {
+            logger.log({ level: 'error', message: err.message });
+            err.status = err.status || 500;
+            sendErrorProd(err, res);
+        }
     }
 });
 

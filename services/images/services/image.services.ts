@@ -23,7 +23,6 @@ export const removeImageOnDB = (id: string) => {
 
 export const checkAuth = async (token: string | undefined) => {
     let headersConfig = {};
-    console.log('TOKEN', token);
     if (token) {
         headersConfig = {
             authorization: token,
