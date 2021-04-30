@@ -1,8 +1,8 @@
 openapi: 3.0.0
 
 info:
-  title: "APIKOM API"
-  description: "API for APIKOM"
+  title: "Microservices API"
+  description: "API for Microservices"
   version: "1.0.0"
 servers:
   - url: http://localhost:8082/api/v1
