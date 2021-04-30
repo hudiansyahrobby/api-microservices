@@ -1,4 +1,4 @@
-import { NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
 import AppError from '../errorHandler/AppError';
 
 const isValid = (schema: any, property: any) => {
