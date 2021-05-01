@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
@@ -14,7 +14,7 @@ import categoryRoute from './routes/category.route';
 import { logger } from './helpers/logger';
 
 config();
-const app = express();
+const app: Application = express();
 
 initDB();
 

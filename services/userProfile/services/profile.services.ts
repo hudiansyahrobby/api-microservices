@@ -1,6 +1,4 @@
-import admin from 'firebase-admin';
 import { UserProfile } from '../interfaces/profile.interface';
-import firebase from 'firebase';
 import Profile from '../models/profile.model';
 import axios from 'axios';
 import { config } from 'dotenv';

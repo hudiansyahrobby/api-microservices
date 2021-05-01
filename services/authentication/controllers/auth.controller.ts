@@ -1,8 +1,7 @@
 import { Response, Request, NextFunction } from 'express';
 import AppError from '../errorHandler/AppError';
 import { catchAsync } from '../errorHandler/catchAsync';
-import { logger } from '../helpers/logger';
-import { User } from '../interfaces/user.interface';
+import { IUser } from '../interfaces/user.interface';
 import {
     registerUser,
     loginUser,
@@ -11,12 +10,13 @@ import {
     logoutUser,
     loginWithGoogle,
     verifyToken,
+    registerUserWithUsername,
 } from '../services/auth.services';
 
 export const registerFirebase = catchAsync(async (req: Request, res: Response) => {
     const { email, phoneNumber, password, displayName } = req.body;
 
-    const newUser: User = {
+    const newUser: IUser = {
         email,
         phoneNumber,
         displayName,
@@ -24,7 +24,6 @@ export const registerFirebase = catchAsync(async (req: Request, res: Response) =
     };
 
     const userData = await registerUser(newUser);
-    delete userData['password'];
 
     return res.status(201).json({ data: userData, message: 'User successfully registered', status: 201 });
 });
@@ -47,17 +46,16 @@ export const registerUsername = catchAsync(async (req: Request, res: Response, n
     const { username, phoneNumber, displayName, password } = req.body;
     const _username = username + '@apikom.com';
 
-    const newUser: User = {
+    const newUser: IUser = {
         email: _username,
         phoneNumber,
         displayName,
         password,
     };
 
-    const userData = await registerUser(newUser);
-    delete userData['password'];
+    const userData = await registerUserWithUsername(newUser);
 
-    return res.status(200).json({ data: userData, message: 'User register successfully', status: 200 });
+    return res.status(201).json({ data: userData, message: 'User register successfully', status: 201 });
 });
 
 export const loginUsername = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -72,7 +70,25 @@ export const loginUsername = catchAsync(async (req: Request, res: Response, next
     }
 
     const { token, user: userData } = user;
-    return res.status(200).json({ data: { user: userData, token }, message: 'User login successfully', status: 200 });
+
+    let loggedInUser;
+    if (userData) {
+        const userJSON: any = userData.toJSON();
+
+        const { uid, displayName, photoURL, email, phoneNumber } = userJSON;
+
+        loggedInUser = {
+            uid,
+            displayName,
+            photoURL,
+            email,
+            phoneNumber,
+        };
+    }
+
+    return res
+        .status(200)
+        .json({ data: { user: loggedInUser, token }, message: 'User login successfully', status: 200 });
 });
 
 export const revokeRefreshToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

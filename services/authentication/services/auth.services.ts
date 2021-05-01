@@ -1,32 +1,47 @@
 import admin from 'firebase-admin';
-import { User } from '../interfaces/user.interface';
+import { IUser } from '../interfaces/user.interface';
 import firebase from 'firebase';
+import User from '../models/user.model';
 
-export const registerUser = async (newUser: User) => {
-    const db = admin.firestore();
-    const docRef = db.collection('users');
+export const saveUserOnDB = async (newUser: IUser) => {
+    console.log(newUser);
+    return User.create(newUser);
+};
 
+export const registerUser = async (newUser: IUser) => {
     const { uid } = await admin.auth().createUser(newUser);
-    await docRef.doc(uid).set({ ...newUser, uid });
+
     const userData = {
         ...newUser,
         uid,
     };
-    return userData;
+
+    const registeredUser = await saveUserOnDB(userData);
+    return registeredUser;
+};
+
+export const registerUserWithUsername = async (newUser: IUser) => {
+    const { uid } = await admin.auth().createUser(newUser);
+    const { displayName, email, phoneNumber } = newUser;
+    const username = email?.replace('@apikom.com', '');
+
+    const userData = {
+        username,
+        displayName,
+        phoneNumber,
+        uid,
+    };
+
+    const registeredUser = await saveUserOnDB(userData);
+    return registeredUser;
 };
 
 export const loginUser = async (email: string, password: string) => {
     const { user } = await firebase.auth().signInWithEmailAndPassword(email, password);
+
     const token = await user?.getIdToken();
 
-    const db = admin.firestore();
-    const userRef = db.collection('users').doc(user?.uid as string);
-    const doc = await userRef.get();
-    if (!doc.exists) {
-        console.log('User not found');
-    } else {
-        return { user: doc.data(), token };
-    }
+    return { user, token };
 };
 
 export const refreshToken = (uid: string) => {

@@ -13,12 +13,6 @@ export default class Profile extends Model {
     uid: string;
 
     @Column(DataType.STRING)
-    firstName: string;
-
-    @Column(DataType.STRING)
-    lastName: string;
-
-    @Column(DataType.STRING)
     address: string;
 
     @Column(DataType.TEXT)
@@ -33,10 +27,6 @@ export default class Profile extends Model {
     @BeforeCreate
     @BeforeUpdate
     static makeLowerCase(instance: Profile) {
-        // console.log(instance);
-        // this will be called when an instance is created or updated
-        instance.firstName = instance.firstName.toLowerCase();
-        instance.lastName = instance.lastName.toLowerCase();
         instance.job = instance.job.toLowerCase();
     }
 }

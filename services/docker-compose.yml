@@ -1,5 +1,17 @@
 version: '3.7'
 services:
+  users_db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_USER: postgres
+      POSTGRES_DB: users
+    volumes:
+      - ./users_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5428:5432"
+    networks:
+      - proxynet
   profile_db:
       image: postgres
       environment:
@@ -54,6 +66,9 @@ services:
       image: apikom_authentication
       volumes:
       - ./authentication/:/usr/src/app
+      command: bash -c "npm run migrate:reset && npm run dev"
+      depends_on:
+        - users_db
       ports:
         - "8081:8081"
       networks:

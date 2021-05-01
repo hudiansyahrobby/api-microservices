@@ -6,17 +6,19 @@ import { config as dotenv } from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
 
-// Routes
-import authRoute from './routes/auth.route';
+import initDB from './helpers/initDB';
 import firebaseInit from './helpers/firebase/firebaseInit';
 import AppError from './errorHandler/AppError';
 import { sendErrorDev, sendErrorProd } from './errorHandler/errorResponse';
 import { logger } from './helpers/logger';
 
+// Routes
+import authRoute from './routes/auth.route';
+
 dotenv();
 
 const app: Application = express();
-
+initDB();
 firebaseInit();
 
 app.use(express.json());
