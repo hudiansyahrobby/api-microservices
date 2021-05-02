@@ -137,15 +137,15 @@ export const uploadProductImage = (
         ...headersConfig,
     };
 
-    return axios.post('http://172.25.0.8:8084/api/v1/images', form, { headers });
+    return axios.post('http://services_images_1:8084/api/v1/images', form, { headers });
 };
 
 export const getImageByProductId = (productId: string) => {
-    return axios.get(`http://172.25.0.8:8084/api/v1/images/products/${productId}`);
+    return axios.get(`http://services_images_1:8084/api/v1/images/products/${productId}`);
 };
 
 export const deleteImageById = (imageId: string) => {
-    return axios.get(`http://172.25.0.8:8084/api/v1/images/${imageId}`);
+    return axios.get(`http://services_images_1:8084/api/v1/images/${imageId}`);
 };
 
 export const deleteImageByProductId = (productId: string, token: string | undefined) => {
@@ -156,13 +156,13 @@ export const deleteImageByProductId = (productId: string, token: string | undefi
             authorization: token,
         };
     }
-    return axios.delete(`http://172.25.0.8:8084/api/v1/images/products/${productId}`, {
+    return axios.delete(`http://services_images_1:8084/api/v1/images/products/${productId}`, {
         headers: headersConfig,
     });
 };
 
 export const getCategoryById = (categoryId: string) => {
-    return axios.get(`http://172.25.0.9:8085/api/v1/categories/${categoryId}`);
+    return axios.get(`http://services_categories_1:8085/api/v1/categories/${categoryId}`);
 };
 
 export const checkAuth = async (token: string | undefined) => {
@@ -174,7 +174,7 @@ export const checkAuth = async (token: string | undefined) => {
         };
     }
     const response = await axios.post(
-        `http://172.25.0.2:8081/api/v1/auth/check-auth`,
+        `http://services_authentication_1:8081/api/v1/auth/check-auth`,
         {},
         {
             headers: headersConfig,
