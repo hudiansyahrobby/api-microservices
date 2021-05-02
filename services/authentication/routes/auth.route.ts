@@ -10,6 +10,8 @@ import {
     loginFacebook,
     revokeRefreshToken,
     checkAuth,
+    getUser,
+    findUser,
 } from '../controllers/auth.controller';
 import isValid from '../middlewares/isValid';
 import AuthValidation from '../validations/auth.validation';
@@ -33,5 +35,9 @@ router.post('/auth/refresh-token', revokeRefreshToken);
 router.post('/auth/logout', logout);
 
 router.post('/auth/check-auth', checkAuth);
+
+router.get('/auth/user/:uid', getUser);
+
+router.get('/auth/user/search/:keyword', findUser);
 
 export default router;

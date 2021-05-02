@@ -11,6 +11,8 @@ import {
     loginWithGoogle,
     verifyToken,
     registerUserWithUsername,
+    getUserByUID,
+    searchUser,
 } from '../services/auth.services';
 
 export const registerFirebase = catchAsync(async (req: Request, res: Response) => {
@@ -24,7 +26,6 @@ export const registerFirebase = catchAsync(async (req: Request, res: Response) =
     };
 
     const userData = await registerUser(newUser);
-
     return res.status(201).json({ data: userData, message: 'User successfully registered', status: 201 });
 });
 
@@ -39,7 +40,23 @@ export const loginFirebase = catchAsync(async (req: Request, res: Response, next
 
     const { token, user: userData } = user;
 
-    return res.status(200).json({ data: { user: userData, token }, message: 'User login successfully', status: 200 });
+    let loggedInUser;
+    if (userData) {
+        const userJSON: any = userData.toJSON();
+
+        const { uid, displayName, email, phoneNumber } = userJSON;
+
+        loggedInUser = {
+            uid,
+            displayName,
+            email,
+            phoneNumber,
+        };
+    }
+
+    return res
+        .status(200)
+        .json({ data: { user: loggedInUser, token }, message: 'User login successfully', status: 200 });
 });
 
 export const registerUsername = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -75,12 +92,11 @@ export const loginUsername = catchAsync(async (req: Request, res: Response, next
     if (userData) {
         const userJSON: any = userData.toJSON();
 
-        const { uid, displayName, photoURL, email, phoneNumber } = userJSON;
+        const { uid, displayName, email, phoneNumber } = userJSON;
 
         loggedInUser = {
             uid,
             displayName,
-            photoURL,
             email,
             phoneNumber,
         };
@@ -133,5 +149,39 @@ export const checkAuth = catchAsync(async (req: Request, res: Response, next: Ne
         message: 'Token is valid',
         status: 200,
         data: user,
+    });
+});
+
+export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { uid } = req.params;
+    const user = await getUserByUID(uid);
+    if (!user) return next(new AppError(`User with uid ${uid} not found`, 404, 'not-found'));
+
+    return res.status(200).json({
+        message: 'OK',
+        status: 200,
+        data: user,
+    });
+});
+
+export const findUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const { keyword } = req.params;
+    const { page, size } = req.query;
+
+    const _page = parseInt(page as string);
+    const _size = parseInt(size as string);
+
+    const { results, totalItems, totalPages, limit } = await searchUser(keyword, _page, _size);
+
+    return res.status(200).json({
+        message: 'OK',
+        data: results,
+        status: 200,
+        meta: {
+            count: totalItems,
+            load: results.length,
+            page: totalPages,
+            offset: limit,
+        },
     });
 });

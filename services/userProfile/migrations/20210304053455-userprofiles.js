@@ -15,19 +15,19 @@ module.exports = {
             },
             address: {
                 type: Sequelize.STRING(),
-                allowNull: false,
+                allowNull: true,
             },
             about: {
                 type: Sequelize.TEXT(),
-                allowNull: false,
+                allowNull: true,
             },
             job: {
                 type: Sequelize.STRING(70),
-                allowNull: false,
+                allowNull: true,
             },
             birthday: {
                 type: Sequelize.DATE,
-                allowNull: false,
+                allowNull: true,
             },
             createdAt: {
                 allowNull: false,

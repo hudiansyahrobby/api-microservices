@@ -66,7 +66,7 @@ services:
       image: apikom_authentication
       volumes:
       - ./authentication/:/usr/src/app
-      command: bash -c "npm run migrate:reset && npm run dev"
+      # command: bash -c "npm run migrate:reset && npm run dev"
       depends_on:
         - users_db
       ports:
@@ -79,7 +79,7 @@ services:
     image: apikom_userprofile
     volumes:
       - ./userProfile/:/usr/src/app
-    command: bash -c "npm run migrate:reset && npm run dev"
+    # command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - profile_db
     ports:
@@ -92,7 +92,7 @@ services:
     image: apikom_products
     volumes:
       - ./products/:/usr/src/app
-    command: bash -c "npm run migrate:reset && npm run dev"
+    # command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - products_db
     ports:
@@ -105,7 +105,7 @@ services:
     image: apikom_images
     volumes:
       - ./images/:/usr/src/app
-    command: bash -c "npm run migrate:reset && npm run dev"
+    # command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - images_db
     ports:
@@ -118,7 +118,7 @@ services:
     image: apikom_categories
     volumes:
       - ./categories/:/usr/src/app
-    command: bash -c "npm run migrate:reset && npm run dev"
+    # command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - categories_db
     ports:

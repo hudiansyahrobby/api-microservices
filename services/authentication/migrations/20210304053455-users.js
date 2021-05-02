@@ -17,6 +17,10 @@ module.exports = {
                 type: Sequelize.STRING(70),
                 allowNull: false,
             },
+            phoneNumber: {
+                type: Sequelize.STRING(70),
+                allowNull: false,
+            },
             username: {
                 type: Sequelize.STRING(20),
                 allowNull: true,

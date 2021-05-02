@@ -25,6 +25,9 @@ export default class User extends Model {
     @Column(DataType.STRING)
     displayName: string;
 
+    @Column(DataType.STRING)
+    phoneNumber: string;
+
     @AllowNull
     @Column(DataType.STRING)
     username: string;

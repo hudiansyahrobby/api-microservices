@@ -1,6 +1,6 @@
-import { UserProfile } from '../interfaces/profile.interface';
+import { IUser, UserData, UserProfile, UserProfileData, UserResponse } from '../interfaces/profile.interface';
 import Profile from '../models/profile.model';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { config } from 'dotenv';
 
 config();
@@ -16,11 +16,12 @@ export const updateUserProfile = async (uid: string, updatedProfile: UserProfile
     });
 };
 
-export const getUserProfile = async (uid: string) => {
+export const getUserProfile = async (uid: string): Promise<any> => {
     return Profile.findOne({
         where: {
             uid,
         },
+        raw: true,
     });
 };
 
@@ -38,7 +39,7 @@ export const checkAuth = async (token: string | undefined) => {
         };
     }
     const response = await axios.post(
-        `http://172.25.0.5:8081/api/v1/auth/check-auth`,
+        `http://services_authentication_1:8081/api/v1/auth/check-auth`,
         {},
         {
             headers: headersConfig,
@@ -48,4 +49,33 @@ export const checkAuth = async (token: string | undefined) => {
     return uid;
 };
 
-export const searchUserProfile = async (newProfile: UserProfile) => {};
+export const findUserData = async (keyword: string) => {
+    const user = await axios.get(`http://services_authentication_1:8081/api/v1/auth/user/search/${keyword}`);
+    return user.data.data;
+};
+
+export const searchUserProfile = async (keyword: string) => {
+    const users: IUser[] = await findUserData(keyword);
+
+    const allUserProfiles: Promise<AxiosResponse<any>>[] = [];
+
+    users.map((user) => allUserProfiles.push(getUserProfile(user.uid)));
+
+    const allUserProfilePromises = Promise.all(allUserProfiles);
+    const profiles = await allUserProfilePromises;
+
+    const _allUserProfiles = users.map((user, index) => {
+        let _user: UserData = user;
+        const profile = { ..._user, ...profiles[index] };
+        return profile;
+    });
+
+    let _userProfileData: UserData[] = users;
+    _userProfileData = _allUserProfiles;
+    return _userProfileData;
+};
+
+export const getUserData = async (uid: string) => {
+    const user = await axios.get(`http://services_authentication_1:8081/api/v1/auth/user/${uid}`);
+    return user.data.data;
+};

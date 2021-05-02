@@ -6,4 +6,5 @@ export interface IUser {
     photoURL?: string;
     phoneNumber: string;
     password?: string;
+    facebookId?: string;
 }

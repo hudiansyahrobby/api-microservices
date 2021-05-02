@@ -2,6 +2,10 @@ import admin from 'firebase-admin';
 import { IUser } from '../interfaces/user.interface';
 import firebase from 'firebase';
 import User from '../models/user.model';
+import axios from 'axios';
+import { Op } from 'sequelize';
+import { getPagination } from '../helpers/getPagination';
+import { getPaginationData } from '../helpers/getPaginationData';
 
 export const saveUserOnDB = async (newUser: IUser) => {
     console.log(newUser);
@@ -17,6 +21,8 @@ export const registerUser = async (newUser: IUser) => {
     };
 
     const registeredUser = await saveUserOnDB(userData);
+    await createUserProfile({ uid });
+
     return registeredUser;
 };
 
@@ -68,5 +74,42 @@ export const verifyToken = async (token: string) => {
 };
 
 export const getUserByUID = async (uid: string) => {
-    return admin.auth().getUser(uid);
+    return User.findOne({ where: { uid } });
+};
+
+export const createUserProfile = async (uid: { uid: string }) => {
+    return axios.post('http://services_userprofile_1:8082/api/v1/user-profile', uid);
+};
+
+export const searchUser = async (keyword: string, page: number, size: number) => {
+    const { limit, offset } = getPagination(page, size);
+
+    const users = await User.findAndCountAll({
+        where: {
+            [Op.or]: [
+                {
+                    displayName: {
+                        [Op.iLike]: `%${keyword}%`,
+                    },
+                },
+                {
+                    phoneNumber: keyword,
+                },
+                {
+                    username: {
+                        [Op.iLike]: `%${keyword}%`,
+                    },
+                },
+                {
+                    email: keyword,
+                },
+            ],
+        },
+        limit,
+        offset,
+        raw: true,
+    });
+
+    const _users = getPaginationData(users, page, limit);
+    return _users;
 };

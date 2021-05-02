@@ -4,6 +4,7 @@ import {
     deleteProfile,
     getMyProfile,
     getProfileById,
+    searchUser,
     updateProfile,
 } from '../controllers/profile.controller';
 
@@ -22,6 +23,6 @@ router.put('/user-profile/me', updateProfile);
 
 router.delete('/user-profile/me', deleteProfile);
 
-router.post('/user-profile/search', deleteProfile);
+router.get('/user-profile/search/:keyword', searchUser);
 
 export default router;

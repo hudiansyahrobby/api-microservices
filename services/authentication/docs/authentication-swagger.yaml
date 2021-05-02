@@ -152,6 +152,46 @@ paths:
       responses:
         '200':
           description: User authenticated
+  /auth/user/{uid}:
+    get:
+      summary: Get User By UID
+      description: "Get User By UID"
+      tags:
+        - "Authentication"
+      parameters:
+      - in: path
+        required: true
+        name: uid
+        schema:
+          type: string
+        description: Get User By UID  
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "User not found"
+        500:
+          description: "Server Error"
+  /auth/user/search/{keyword}:
+    get:
+      summary: Find User By Facebook ID, Name, Phone Number, and Email
+      description: "Find User By Facebook ID, Name, Phone Number, and Email"
+      tags:
+        - "Authentication"
+      parameters:
+      - in: path
+        required: true
+        name: keyword
+        schema:
+          type: string
+        description: Find User By Facebook ID, Name, Phone Number, and Email  
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "User not found"
+        500:
+          description: "Server Error"
 components:
   schemas:
     UserWithUsername:
