@@ -2,6 +2,7 @@ version: '3.7'
 services:
   users_db:
     image: postgres
+    container_name: users_db
     environment:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_USER: postgres
@@ -14,6 +15,7 @@ services:
       - proxynet
   profile_db:
       image: postgres
+      container_name: profile_db
       environment:
         POSTGRES_PASSWORD: mysecretpassword
         POSTGRES_USER: postgres
@@ -26,6 +28,7 @@ services:
         - proxynet
   products_db:
       image: postgres
+      container_name: products_db
       environment:
         POSTGRES_PASSWORD: mysecretpassword
         POSTGRES_USER: postgres
@@ -38,6 +41,7 @@ services:
         - proxynet
   images_db:
       image: postgres
+      container_name: images_db
       environment:
         POSTGRES_PASSWORD: mysecretpassword
         POSTGRES_USER: postgres
@@ -50,6 +54,7 @@ services:
         - proxynet
   categories_db:
       image: postgres
+      container_name: categories_db
       environment:
         POSTGRES_PASSWORD: mysecretpassword
         POSTGRES_USER: postgres
@@ -63,10 +68,11 @@ services:
   authentication:
       build:
         context: ./authentication/
+      container_name: authentication
       image: apikom_authentication
       volumes:
       - ./authentication/:/usr/src/app
-      # command: bash -c "npm run migrate:reset && npm run dev"
+      command: bash -c "npm run migrate:reset && npm run dev"
       depends_on:
         - users_db
       ports:
@@ -76,10 +82,11 @@ services:
   userprofile:
     build:
       context: ./userProfile/
+    container_name: userprofile
     image: apikom_userprofile
     volumes:
       - ./userProfile/:/usr/src/app
-    # command: bash -c "npm run migrate:reset && npm run dev"
+    command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - profile_db
     ports:
@@ -89,10 +96,11 @@ services:
   products:
     build:
       context: ./products/
+    container_name: products
     image: apikom_products
     volumes:
       - ./products/:/usr/src/app
-    # command: bash -c "npm run migrate:reset && npm run dev"
+    command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - products_db
     ports:
@@ -102,10 +110,11 @@ services:
   images:
     build:
       context: ./images/
+    container_name: images
     image: apikom_images
     volumes:
       - ./images/:/usr/src/app
-    # command: bash -c "npm run migrate:reset && npm run dev"
+    command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - images_db
     ports:
@@ -115,14 +124,42 @@ services:
   categories:
     build:
       context: ./categories/
+    container_name: categories
     image: apikom_categories
     volumes:
       - ./categories/:/usr/src/app
-    # command: bash -c "npm run migrate:reset && npm run dev"
+    command: bash -c "npm run migrate:reset && npm run dev"
     depends_on: 
       - categories_db
     ports:
       - "8085:8085"
+    networks:
+      - proxynet
+  documentation:
+    build:
+      context: ./documentation/
+    image: apikom_documentations
+    volumes:
+      - ./documentation/:/usr/src/app
+    container_name: documentation
+    ports:
+      - "8086:8086"
+    networks:
+      - proxynet
+  nginx:
+    image: nginx:latest
+    container_name: apigateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - categories
+      - images
+      - products
+      - userprofile
+      - authentication
+      - documentation
     networks:
       - proxynet
 networks:

@@ -24,14 +24,7 @@ firebaseInit();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const origin = process.env.NODE_ENV !== 'production' ? '*' : process.env.CLIENT_URL;
-
-app.use(
-    cors({
-        origin: origin,
-        credentials: process.env.NODE_ENV === 'production',
-    }),
-);
+app.use(cors());
 
 app.use(compression());
 
@@ -49,7 +42,7 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:8081/api/v1',
+                url: 'http://localhost:8080/api/v1',
             },
         ],
     },
@@ -58,7 +51,7 @@ const options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/auth/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/v1', authRoute);
 

@@ -47,7 +47,7 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:8082/api/v1',
+                url: 'http://localhost:8080/api/v1',
             },
         ],
     },
@@ -56,7 +56,7 @@ const options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/user-profile/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api/v1', profileRoute);
 

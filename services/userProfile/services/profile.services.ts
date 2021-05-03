@@ -50,7 +50,7 @@ export const checkAuth = async (token: string | undefined) => {
 };
 
 export const findUserData = async (keyword: string) => {
-    const user = await axios.get(`http://services_authentication_1:8081/api/v1/auth/user/search/${keyword}`);
+    const user = await axios.post(`http://services_authentication_1:8081/api/v1/auth/user/search/${keyword}`);
     return user.data.data;
 };
 

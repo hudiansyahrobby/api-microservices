@@ -32,8 +32,6 @@ app.use(compression());
 
 app.use(helmet());
 
-app.use('/api/v1', categoryRoute);
-
 // Swagger Documentatios
 
 const options = {
@@ -46,7 +44,7 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:8085/api/v1',
+                url: 'http://localhost:8080/api/v1',
             },
         ],
     },
@@ -57,7 +55,9 @@ const swaggerSpec = swaggerJSDoc(options);
 
 // TODO DB ERROR HANDLER
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/categories/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.use('/api/v1', categoryRoute);
 
 app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404, 'not-found'));

@@ -1,0 +1,170 @@
+openapi: 3.0.0
+
+info:
+  title: "Microservices API"
+  description: "API for Microservices"
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8083/api/v1
+paths: 
+  /products:
+    post:
+      description: "Create new product"
+      tags:
+        - "Products"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        201:
+          description: "Created"
+        401:
+          description: "Access Denied"
+        404:
+          description: "Not Found"
+        422:
+          description: "Validation Error"
+        500:
+          description: "Server Error"
+    get:
+      description: "Get All products or by category"
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: product list at particular page  
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: The numbers of items to return
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search items
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [latest, oldest]
+          description: sort product by latest or oldest
+      tags:
+        - "Products"
+      responses:
+        200:
+          description: "OK"
+        500:
+          description: "Server Error"
+  /products/{productId}:
+    get:
+      description: "Get products detail"
+      parameters:
+        - in: path
+          required: true
+          name: productId
+          schema:
+            type: string
+          description: Get product detail by id  
+      tags:
+        - "Products"
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "Product not found"
+        500:
+          description: "Server Error"
+    put:
+      description: "update product by id"
+      tags:
+        - "Products"
+      parameters:
+      - in: path
+        required: true
+        name: productId
+        schema:
+          type: string
+        description: update product detail by id  
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf: 
+                - $ref: '#/components/schemas/Product'
+      responses:
+        200:
+          description: "OK"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Product not found"
+        422:
+          description: "Validation Error"
+        500:
+          description: "Server Error"
+    delete:
+      description: "Delete product by id"
+      parameters:
+      - in: path
+        required: true
+        name: productId
+        schema:
+          type: string
+        description: Get product detail by id  
+      security:
+        - bearerAuth: []
+      tags:
+        - "Products"
+      responses:
+        200:
+          description: "OK"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Product not found"
+        500:
+          description: "Server Error"
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Baju armor"
+        quantity:
+          type: number
+          example: 20
+        price:
+          type: number
+          example: 10000
+        description:
+          type: string
+          example: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. "
+        categoryId:
+          type: string
+          example: "46fda6af-6c3b-435d-aa5e-07214f6e3eef"
+        images: 
+          type: string
+          format: binary
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  
+
+    
+
+  

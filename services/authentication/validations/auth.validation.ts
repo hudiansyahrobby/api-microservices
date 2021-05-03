@@ -3,6 +3,7 @@ import Joi from 'joi';
 const auth = {
     registerFirebase: Joi.object().keys({
         displayName: Joi.string()
+            .trim()
             .pattern(/^[a-zA-Z ]*$/)
             .required()
             .messages({
@@ -11,13 +12,23 @@ const auth = {
                 'string.pattern.base': `display name should only contain alphapet or space`,
                 'any.required': `display name is a required field`,
             }),
-        email: Joi.string().email().required().messages({
+        email: Joi.string().email().required().trim().messages({
             'string.base': `email should be a type of string`,
             'string.empty': `email cannot be an empty field`,
             'string.email': 'email is not valid',
             'any.required': `email is a required field`,
         }),
-        phoneNumber: Joi.string().required().messages({
+        username: Joi.string().alphanum().trim().messages({
+            'string.base': `username should be a type of string`,
+            'string.empty': `username cannot be an empty field`,
+            'string.alphanum': `username should only contain alphapet or number`,
+        }),
+        facebookId: Joi.string().alphanum().trim().messages({
+            'string.base': `username should be a type of string`,
+            'string.empty': `username cannot be an empty field`,
+            'string.alphanum': `username should only contain alphapet or number`,
+        }),
+        phoneNumber: Joi.string().required().trim().messages({
             'string.base': `Phone number should be a type of string`,
             'string.empty': `Phone number cannot be an empty field`,
             'any.required': `Phone number is a required field`,
@@ -41,13 +52,13 @@ const auth = {
     }),
 
     loginFirebase: Joi.object().keys({
-        email: Joi.string().email().required().messages({
+        email: Joi.string().email().trim().required().messages({
             'string.base': `email should be a type of string`,
             'string.empty': `email cannot be an empty field`,
             'string.email': `email is not valid`,
             'any.required': `email is a required field`,
         }),
-        password: Joi.string().required().messages({
+        password: Joi.string().trim().required().messages({
             'string.base': `password should be a type of string`,
             'string.empty': `password cannot be an empty field`,
             'any.required': `password is a required field`,
@@ -56,6 +67,7 @@ const auth = {
 
     registerUsername: Joi.object().keys({
         displayName: Joi.string()
+            .trim()
             .pattern(/^[a-zA-Z ]*$/)
             .required()
             .messages({
@@ -64,16 +76,26 @@ const auth = {
                 'string.pattern.base': `display name should only contain alphapet or space`,
                 'any.required': `display name is a required field`,
             }),
-        username: Joi.string().alphanum().required().messages({
+        username: Joi.string().trim().alphanum().required().messages({
             'string.base': `username should be a type of string`,
             'string.empty': `username cannot be an empty field`,
             'string.alphanum': `username should only contain alphapet or number`,
             'any.required': `username is a required field`,
         }),
-        phoneNumber: Joi.string().required().messages({
+        phoneNumber: Joi.string().trim().required().messages({
             'string.base': `Phone number should be a type of string`,
             'string.empty': `Phone number cannot be an empty field`,
             'any.required': `Phone number is a required field`,
+        }),
+        facebookId: Joi.string().trim().alphanum().messages({
+            'string.base': `username should be a type of string`,
+            'string.empty': `username cannot be an empty field`,
+            'string.alphanum': `username should only contain alphapet or number`,
+        }),
+        email: Joi.string().email().trim().messages({
+            'string.base': `email should be a type of string`,
+            'string.empty': `email cannot be an empty field`,
+            'string.email': 'email is not valid',
         }),
         password: Joi.string()
             .min(8)
@@ -94,13 +116,13 @@ const auth = {
     }),
 
     loginUsername: Joi.object().keys({
-        username: Joi.string().alphanum().required().messages({
+        username: Joi.string().alphanum().trim().required().messages({
             'string.base': `username should be a type of string`,
             'string.empty': `username cannot be an empty field`,
             'string.alphanum': `username should only contain alphapet or number`,
             'any.required': `username is a required field`,
         }),
-        password: Joi.string().required().messages({
+        password: Joi.string().required().trim().messages({
             'string.base': `password should be a type of string`,
             'string.empty': `password cannot be an empty field`,
             'any.required': `password is a required field`,

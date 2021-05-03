@@ -38,6 +38,6 @@ router.post('/auth/check-auth', checkAuth);
 
 router.get('/auth/user/:uid', getUser);
 
-router.get('/auth/user/search/:keyword', findUser);
+router.post('/auth/user/search/:keyword', findUser);
 
 export default router;

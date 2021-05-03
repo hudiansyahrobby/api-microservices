@@ -13,13 +13,13 @@ import profileValidation from '../validations/profile.validation';
 
 const router = Router();
 
-router.post('/user-profile', createProfile);
+router.post('/user-profile', isValid(profileValidation.profile, 'body'), createProfile);
 
 router.get('/user-profile/me', getMyProfile);
 
 router.get('/user-profile/:profileId', getProfileById);
 
-router.put('/user-profile/me', updateProfile);
+router.put('/user-profile/me', isValid(profileValidation.profile, 'body'), updateProfile);
 
 router.delete('/user-profile/me', deleteProfile);
 

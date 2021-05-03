@@ -1,0 +1,145 @@
+openapi: 3.0.0
+
+info:
+  title: "Microservices API"
+  description: "API for Microservices"
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8084/api/v1
+paths: 
+  /images:
+    post:
+      summary: Upload Images
+      description: "Upload Images"
+      tags:
+        - "Images"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf: 
+                - $ref: '#/components/schemas/Image'
+      responses:
+        201:
+          description: "Created"
+        401:
+          description: "Access Denied"
+        403:
+          description: "Forbidden"
+        422:
+          description: "Validation Error"
+        500:
+          description: "Server Error"
+  /images/{imageId}:
+    get:
+      summary: Get image by ID
+      description: "Get image by ID"
+      tags:
+        - "Images"
+      parameters:
+      - in: path
+        required: true
+        name: imageId
+        schema:
+          type: string
+        description: Get image by id  
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Access Denied"
+        404:
+          description: "Image not found"
+        500:
+          description: "Server Error"
+    delete:
+      summary: Delete image by ID
+      description: "Delete image by ID"
+      parameters:
+      - in: path
+        required: true
+        name: imageId
+        schema:
+          type: string
+        description: Get image by id  
+      security:
+        - bearerAuth: []
+      tags:
+        - "Images"
+      responses:
+        200:
+          description: "Image deleted successfully"
+        400:
+          description: "Bad Request"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Image not found"
+        500:
+          description: "Server Error"
+  /images/products/{productId}:
+    get:
+      summary: Get image by product ID
+      description: "Get image by product ID"
+      tags:
+        - "Images"
+      parameters:
+      - in: path
+        required: true
+        name: productId
+        schema:
+          type: string
+        description: Get image by productId  
+      responses:
+        200:
+          description: "OK"
+        500:
+          description: "Server Error"
+    delete:
+      summary: Delete image by product ID
+      description: "Delete image by product ID"
+      parameters:
+      - in: path
+        required: true
+        name: productId
+        schema:
+          type: string
+        description: Get image by productId  
+      security:
+        - bearerAuth: []
+      tags:
+        - "Images"
+      responses:
+        200:
+          description: "Image deleted successfully"
+        403:
+          description: "Forbidden"
+        500:
+          description: "Server Error"
+components:
+  schemas:
+    Image:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+        product_id:
+          type: string
+          example: 96b46303-46ee-4c94-b774-eaabbf14777e
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  
+
+    
+
+  

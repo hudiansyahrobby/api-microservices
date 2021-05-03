@@ -1,0 +1,135 @@
+openapi: 3.0.0
+
+info:
+  title: "Microservices API"
+  description: "API for Microservices"
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8085/api/v1
+paths: 
+  /categories:
+    post:
+      summary: Create New Category 
+      description: "Create new categories"
+      tags:
+        - "Categories"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf: 
+                - $ref: '#/components/schemas/Category'
+      responses:
+        201:
+          description: "Created"
+        401:
+          description: "Access Denied"
+        422:
+          description: "Validation Error"
+        500:
+          description: "Server Error"
+    get:
+      summary: Get All Categories
+      description: "Get all categories"
+      tags:
+        - "Categories"
+      responses:
+        200:
+          description: "Success"
+        500:
+          description: "Server Error"
+  /categories/{categoryId}:
+    get:
+      summary: Get Category By ID
+      description: "get category by id"
+      tags:
+        - "Categories"
+      parameters:
+      - in: path
+        required: true
+        name: categoryId
+        schema:
+          type: string
+        description: get category by id  
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "Category not found"
+        500:
+          description: "Server Error"
+    put:
+      summary: Update Category By ID
+      description: "update category by id"
+      tags:
+        - "Categories"
+      parameters:
+      - in: path
+        required: true
+        name: categoryId
+        schema:
+          type: string
+        description: update category by id  
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf: 
+                - $ref: '#/components/schemas/Category'
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Access Denied"
+        404:
+          description: "Category not found"
+        422:
+          description: "Validation Error"
+        500:
+          description: "Server Error"
+    delete:
+      summary: Delete Category By ID
+      description: "Delete category by id"
+      parameters:
+      - in: path
+        required: true
+        name: categoryId
+        schema:
+          type: string
+        description: Delete Category By ID
+      security:
+        - bearerAuth: []
+      tags:
+        - "Categories"
+      responses:
+        200:
+          description: "OK"
+        404:
+          description: "Category not found"
+        500:
+          description: "Server Error"
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "electronics"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  
+
+    
+
+  

@@ -2,12 +2,11 @@ import Joi from 'joi';
 
 const product = {
     product: Joi.object().keys({
-        name: Joi.string().required().messages({
+        name: Joi.string().trim().required().messages({
             'string.base': `name must be a type of string`,
             'string.empty': `name cannot be an empty field`,
             'any.required': `name is a required field`,
         }),
-
         quantity: Joi.number().required().min(1).messages({
             'number.base': `quantity must be a type of number`,
             'number.empty': `quantity cannot be an empty field`,
@@ -22,7 +21,7 @@ const product = {
             'any.required': `price is a required field`,
         }),
 
-        description: Joi.string().min(150).max(5000).required().messages({
+        description: Joi.string().trim().min(150).max(5000).required().messages({
             'string.base': `description must be a type of string`,
             'string.empty': `description cannot be an empty field`,
             'string.min': 'description must be at least 150 characters',
@@ -30,7 +29,7 @@ const product = {
             'any.required': `description is a required field`,
         }),
 
-        categoryId: Joi.string().guid().required().messages({
+        categoryId: Joi.string().guid().trim().required().messages({
             'string.base': `categoryId must be a type of string`,
             'string.empty': `categoryId cannot be an empty field`,
             'any.required': `categoryId is a required field`,
