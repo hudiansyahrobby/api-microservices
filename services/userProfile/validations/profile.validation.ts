@@ -2,6 +2,11 @@ import Joi from 'joi';
 
 const user = {
     profile: Joi.object().keys({
+        uid: Joi.string().trim().messages({
+            'string.base': `uid must be a type of string`,
+            'string.empty': `uid cannot be an empty field`,
+            'any.required': `uid is a required field`,
+        }),
         address: Joi.string().messages({
             'string.base': `address should be a type of string`,
             'string.empty': `address cannot be an empty field`,

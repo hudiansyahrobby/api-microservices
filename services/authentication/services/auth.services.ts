@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Op } from 'sequelize';
 import { getPagination } from '../helpers/getPagination';
 import { getPaginationData } from '../helpers/getPaginationData';
+import AppError from '../errorHandler/AppError';
 
 export const saveUserOnDB = async (newUser: IUser) => {
     console.log(newUser);
@@ -47,7 +48,26 @@ export const loginUser = async (email: string, password: string) => {
 
     const token = await user?.getIdToken();
 
-    return { user, token };
+    if (!user) {
+        throw new AppError('Email or password is wrong', 400, 'wrong-credentials');
+    }
+
+    let loggedInUser;
+    if (user) {
+        const userJSON: any = user.toJSON();
+
+        const { uid, displayName, email, phoneNumber } = userJSON;
+
+        loggedInUser = {
+            uid,
+            displayName,
+            email,
+            phoneNumber,
+            token,
+        };
+    }
+
+    return loggedInUser;
 };
 
 export const refreshToken = (uid: string) => {
@@ -74,11 +94,13 @@ export const verifyToken = async (token: string) => {
 };
 
 export const getUserByUID = async (uid: string) => {
-    return User.findOne({ where: { uid } });
+    const user = await User.findOne({ where: { uid } });
+    if (!user) throw new AppError(`User with uid ${uid} not found`, 404, 'not-found');
+    return user;
 };
 
 export const createUserProfile = async (uid: { uid: string }) => {
-    return axios.post('http://services_userprofile_1:8082/api/v1/user-profile', uid);
+    return axios.post('http://apigateway:8080/api/v1/user-profile', uid);
 };
 
 export const searchUser = async (keyword: string, page: number, size: number) => {
@@ -112,4 +134,18 @@ export const searchUser = async (keyword: string, page: number, size: number) =>
 
     const _users = getPaginationData(users, page, limit);
     return _users;
+};
+
+export const checkAuthUser = async (bearerToken: string | undefined) => {
+    if (!bearerToken) {
+        throw new AppError('Access denied, Token does not exist on headers', 403, 'forbidden');
+    }
+
+    const accessToken: string = bearerToken.split(' ')[1];
+    if (!accessToken) {
+        throw new AppError('Access denied, Token does not well formatted', 403, 'forbidden');
+    }
+
+    const user = await verifyToken(accessToken);
+    return user;
 };

@@ -5,21 +5,15 @@ import {
     findCategoryById,
     findAllCategories,
     updateCategoryById,
-    checkAuth,
 } from '../services/category.services';
 import CategoryType from '../interfaces/Category';
 import { catchAsync } from '../errorHandler/catchAsync';
-import AppError from '../errorHandler/AppError';
 
 export const create = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { name }: CategoryType = req.body;
     const token = req.headers.authorization;
-    await checkAuth(token);
-    const [category, created] = await createCategory(name);
 
-    if (!created) {
-        return next(new AppError(`Category with name ${name} is already exist`, 400, 'bad-request'));
-    }
+    const category = await createCategory(name, token);
 
     return res.status(201).json({ message: 'Category successfully created', data: category, status: 201 });
 });
@@ -33,9 +27,6 @@ export const getById = catchAsync(async (req: Request, res: Response, next: Next
     const { categoryId } = req.params;
 
     const category = await findCategoryById(categoryId);
-    if (!category) {
-        return next(new AppError(`Category with id ${categoryId} not found`, 404, 'not-found'));
-    }
 
     return res.status(200).json({ message: 'OK', data: category, status: 200 });
 });
@@ -44,22 +35,16 @@ export const update = catchAsync(async (req: Request, res: Response, next: NextF
     const { categoryId } = req.params;
     const { name }: CategoryType = req.body;
     const token = req.headers.authorization;
-    await checkAuth(token);
-    const category = await findCategoryById(categoryId);
-
-    if (!category) {
-        return next(new AppError(`Category with id ${categoryId} not found`, 404, 'not-found'));
-    }
 
     const updatedCategory: CategoryType = {
         name,
     };
 
-    const [_, _updatedCategory] = await updateCategoryById(updatedCategory, categoryId);
+    const _updatedCategory = await updateCategoryById(updatedCategory, categoryId, token);
 
     return res.status(200).json({
         message: 'Category updated successfully',
-        data: _updatedCategory[0],
+        data: _updatedCategory,
         status: 200,
     });
 });
@@ -67,14 +52,8 @@ export const update = catchAsync(async (req: Request, res: Response, next: NextF
 export const remove = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { categoryId } = req.params;
     const token = req.headers.authorization;
-    await checkAuth(token);
-    const category = await findCategoryById(categoryId);
 
-    if (!category) {
-        return next(new AppError(`Category with id ${categoryId} not found`, 404, 'not-found'));
-    }
+    const deletedCategory = await deleteCategoryById(categoryId, token);
 
-    await deleteCategoryById(categoryId);
-
-    return res.status(200).json({ message: 'Category deleted successfully', data: category, status: 200 });
+    return res.status(200).json({ message: 'Category deleted successfully', data: deletedCategory, status: 200 });
 });

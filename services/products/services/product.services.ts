@@ -9,17 +9,58 @@ import { config } from 'dotenv';
 import FormData from 'form-data';
 import fs from 'fs';
 import path from 'path';
+import AppError from '../errorHandler/AppError';
 
 config();
 
-export const getProductbyId = (id: string) => {
-    return Product.findOne({
-        where: { id },
+export const getProductbyId = async (productId: string) => {
+    const product = await Product.findOne({
+        where: { id: productId },
     });
+
+    if (!product) {
+        throw new AppError(`Product with id ${productId} not found`, 404, 'not-found');
+    }
+
+    const category = await getCategoryById(product.categoryId);
+
+    if (!category) {
+        throw new AppError(`Category with id ${product.categoryId} not found`, 404, 'not-found');
+    }
+
+    const images = await getImageByProductId(productId);
+    product.setDataValue('categoryName', category.data.data.name);
+    product.setDataValue('images', images.data.data);
+
+    return product;
 };
 
-export const createProduct = (newProduct: ProductType) => {
-    return Product.create(newProduct);
+export const createProduct = async (
+    newProduct: ProductType,
+    images:
+        | {
+              [fieldname: string]: Express.Multer.File[];
+          }
+        | Express.Multer.File[],
+    token: string | undefined,
+) => {
+    const { categoryId } = newProduct;
+
+    await checkAuth(token);
+    const category = await getCategoryById(categoryId);
+
+    if (!category) {
+        throw new AppError(`Category with id ${categoryId} not found`, 404, 'not-found');
+    }
+
+    const product = await Product.create(newProduct);
+
+    const _images = await uploadProductImage(images, product.id, token);
+
+    product.setDataValue('images', _images.data.data);
+    product.setDataValue('categoryName', category.data.data.name);
+    console.log(product);
+    return product;
 };
 
 export const createBulkProducts = (newProducts: ProductType[]) => {
@@ -99,17 +140,55 @@ export const getProductByCategory = (categoryId: string, limit: number, offset: 
     });
 };
 
-export const updateProductById = (updatedProduct: ProductType, id: string) => {
-    return Product.update(updatedProduct, {
-        where: { id },
+export const updateProductById = async (
+    updatedProduct: ProductType,
+    images:
+        | {
+              [fieldname: string]: Express.Multer.File[];
+          }
+        | Express.Multer.File[],
+    productId: string,
+    token: string | undefined,
+) => {
+    await checkAuth(token);
+
+    const product = await getProductbyId(productId);
+
+    if (!product) {
+        throw new AppError(`Product with id ${productId} not found`, 404, 'not-found');
+    }
+
+    await deleteImageByProductId(productId, token);
+    const [_, _updatedProduct] = await Product.update(updatedProduct, {
+        where: { id: productId },
         returning: true,
     });
+
+    const _images = await uploadProductImage(images, productId, token);
+    const category = await getCategoryById(_updatedProduct[0].categoryId);
+
+    _updatedProduct[0].setDataValue('images', _images.data.data);
+    _updatedProduct[0].setDataValue('categoryName', category.data.data.name);
+
+    return _updatedProduct[0];
 };
 
-export const deleteProductById = (id: string) => {
-    return Product.destroy({
-        where: { id },
+export const deleteProductById = async (productId: string, token: string | undefined) => {
+    await checkAuth(token);
+
+    const product = await getProductbyId(productId);
+
+    if (!product) {
+        throw new AppError(`Product with id ${productId} not found`, 404, 'not-found');
+    }
+
+    await Product.destroy({
+        where: { id: productId },
     });
+
+    await deleteImageByProductId(productId, token);
+
+    return product;
 };
 
 export const uploadProductImage = (
@@ -137,15 +216,15 @@ export const uploadProductImage = (
         ...headersConfig,
     };
 
-    return axios.post('http://services_images_1:8084/api/v1/images', form, { headers });
+    return axios.post('http://images:8084/api/v1/images', form, { headers });
 };
 
 export const getImageByProductId = (productId: string) => {
-    return axios.get(`http://services_images_1:8084/api/v1/images/products/${productId}`);
+    return axios.get(`http://images:8084/api/v1/images/products/${productId}`);
 };
 
 export const deleteImageById = (imageId: string) => {
-    return axios.get(`http://services_images_1:8084/api/v1/images/${imageId}`);
+    return axios.get(`http://images:8084/api/v1/images/${imageId}`);
 };
 
 export const deleteImageByProductId = (productId: string, token: string | undefined) => {
@@ -156,13 +235,13 @@ export const deleteImageByProductId = (productId: string, token: string | undefi
             authorization: token,
         };
     }
-    return axios.delete(`http://services_images_1:8084/api/v1/images/products/${productId}`, {
+    return axios.delete(`http://images:8084/api/v1/images/products/${productId}`, {
         headers: headersConfig,
     });
 };
 
 export const getCategoryById = (categoryId: string) => {
-    return axios.get(`http://services_categories_1:8085/api/v1/categories/${categoryId}`);
+    return axios.get(`http://categories:8085/api/v1/categories/${categoryId}`);
 };
 
 export const checkAuth = async (token: string | undefined) => {
@@ -174,7 +253,7 @@ export const checkAuth = async (token: string | undefined) => {
         };
     }
     const response = await axios.post(
-        `http://services_authentication_1:8081/api/v1/auth/check-auth`,
+        `http://authentication:8081/api/v1/auth/check-auth`,
         {},
         {
             headers: headersConfig,

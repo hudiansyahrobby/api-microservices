@@ -2,6 +2,7 @@ import { IUser, UserData, UserProfile, UserProfileData, UserResponse } from '../
 import Profile from '../models/profile.model';
 import axios, { AxiosResponse } from 'axios';
 import { config } from 'dotenv';
+import AppError from '../errorHandler/AppError';
 
 config();
 
@@ -9,26 +10,77 @@ export const createUserProfile = async (newProfile: UserProfile) => {
     return Profile.create(newProfile);
 };
 
-export const updateUserProfile = async (uid: string, updatedProfile: UserProfile) => {
-    return Profile.update(updatedProfile, {
+export const updateUserProfile = async (updatedProfile: UserProfile, token: string | undefined) => {
+    const uid = await checkAuth(token);
+
+    const userProfile = await getUserProfile(uid);
+
+    if (!userProfile) {
+        throw new AppError(`User Profile with uid ${uid} not found`, 404, 'not-found');
+    }
+
+    const [, _updatedUserProfile] = await Profile.update(updatedProfile, {
         where: { uid },
         returning: true,
     });
+
+    return _updatedUserProfile[0];
 };
 
 export const getUserProfile = async (uid: string): Promise<any> => {
-    return Profile.findOne({
+    const userProfile = await Profile.findOne({
         where: {
             uid,
         },
         raw: true,
     });
+
+    if (!userProfile) {
+        throw new AppError(`User Profile with uid ${uid} not found`, 404, 'not-found');
+    }
+
+    const userData = await getUserData(uid);
+
+    const _userProfile = { ...userProfile, ...userData };
+
+    return _userProfile;
 };
 
-export const deleteUserProfile = async (uid: string) => {
-    return Profile.destroy({
+export const getMyUserprofile = async (token: string | undefined): Promise<any> => {
+    const uid = await checkAuth(token);
+    console.log(uid);
+    const userProfile = await Profile.findOne({
+        where: {
+            uid,
+        },
+        raw: true,
+    });
+
+    if (!userProfile) {
+        throw new AppError('Your profile not found', 404, 'not-found');
+    }
+
+    const userData = await getUserData(uid);
+
+    const _userProfile = { ...userProfile, ...userData };
+
+    return _userProfile;
+};
+
+export const deleteUserProfile = async (token: string | undefined) => {
+    const uid = await checkAuth(token);
+
+    const userProfile = await getUserProfile(uid);
+
+    if (!userProfile) {
+        throw new AppError(`User Profile with uid ${uid} not found`, 404, 'not-found');
+    }
+
+    await Profile.destroy({
         where: { uid },
     });
+
+    return userProfile;
 };
 
 export const checkAuth = async (token: string | undefined) => {
@@ -39,18 +91,19 @@ export const checkAuth = async (token: string | undefined) => {
         };
     }
     const response = await axios.post(
-        `http://services_authentication_1:8081/api/v1/auth/check-auth`,
+        `http://authentication:8081/api/v1/auth/check-auth`,
         {},
         {
             headers: headersConfig,
         },
     );
+    console.log(response.data);
     const uid = response.data.data.uid;
     return uid;
 };
 
 export const findUserData = async (keyword: string) => {
-    const user = await axios.post(`http://services_authentication_1:8081/api/v1/auth/user/search/${keyword}`);
+    const user = await axios.post(`http://authentication:8081/api/v1/auth/user/search/${keyword}`);
     return user.data.data;
 };
 
@@ -76,6 +129,6 @@ export const searchUserProfile = async (keyword: string) => {
 };
 
 export const getUserData = async (uid: string) => {
-    const user = await axios.get(`http://services_authentication_1:8081/api/v1/auth/user/${uid}`);
+    const user = await axios.get(`http://authentication:8081/api/v1/auth/user/${uid}`);
     return user.data.data;
 };

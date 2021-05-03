@@ -13,16 +13,12 @@ import {
     registerUserWithUsername,
     getUserByUID,
     searchUser,
+    checkAuthUser,
 } from '../services/auth.services';
 
 export const registerFirebase = catchAsync(async (req: Request, res: Response) => {
-    const { email, phoneNumber, password, displayName } = req.body;
-
     const newUser: IUser = {
-        email,
-        phoneNumber,
-        displayName,
-        password,
+        ...req.body,
     };
 
     const userData = await registerUser(newUser);
@@ -31,32 +27,9 @@ export const registerFirebase = catchAsync(async (req: Request, res: Response) =
 
 export const loginFirebase = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
+    const loggedInUser = await loginUser(email, password);
 
-    const user = await loginUser(email, password);
-
-    if (!user) {
-        return next(new AppError('Email or password is wrong', 400, 'wrong-credentials'));
-    }
-
-    const { token, user: userData } = user;
-
-    let loggedInUser;
-    if (userData) {
-        const userJSON: any = userData.toJSON();
-
-        const { uid, displayName, email, phoneNumber } = userJSON;
-
-        loggedInUser = {
-            uid,
-            displayName,
-            email,
-            phoneNumber,
-        };
-    }
-
-    return res
-        .status(200)
-        .json({ data: { user: loggedInUser, token }, message: 'User login successfully', status: 200 });
+    return res.status(200).json({ data: { user: loggedInUser }, message: 'User login successfully', status: 200 });
 });
 
 export const registerUsername = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -80,31 +53,9 @@ export const loginUsername = catchAsync(async (req: Request, res: Response, next
 
     const _username = username + '@apikom.com';
 
-    const user = await loginUser(_username, password);
+    const loggedInUser = await loginUser(_username, password);
 
-    if (!user) {
-        return next(new AppError('Email or password is wrong', 400, 'wrong-credentials'));
-    }
-
-    const { token, user: userData } = user;
-
-    let loggedInUser;
-    if (userData) {
-        const userJSON: any = userData.toJSON();
-
-        const { uid, displayName, email, phoneNumber } = userJSON;
-
-        loggedInUser = {
-            uid,
-            displayName,
-            email,
-            phoneNumber,
-        };
-    }
-
-    return res
-        .status(200)
-        .json({ data: { user: loggedInUser, token }, message: 'User login successfully', status: 200 });
+    return res.status(200).json({ data: { user: loggedInUser }, message: 'User login successfully', status: 200 });
 });
 
 export const revokeRefreshToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -135,16 +86,7 @@ export const logout = catchAsync(async (req: Request, res: Response, next: NextF
 
 export const checkAuth = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const bearerToken = req.headers.authorization;
-    if (!bearerToken) {
-        return next(new AppError('Access denied, Token does not exist on headers', 403, 'forbidden'));
-    }
-
-    const accessToken: string = bearerToken.split(' ')[1];
-    if (!accessToken) {
-        return next(new AppError('Access denied, Token does not well formatted', 403, 'forbidden'));
-    }
-    const user = await verifyToken(accessToken);
-
+    const user = await checkAuthUser(bearerToken);
     return res.status(200).json({
         message: 'Token is valid',
         status: 200,
@@ -155,7 +97,6 @@ export const checkAuth = catchAsync(async (req: Request, res: Response, next: Ne
 export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { uid } = req.params;
     const user = await getUserByUID(uid);
-    if (!user) return next(new AppError(`User with uid ${uid} not found`, 404, 'not-found'));
 
     return res.status(200).json({
         message: 'OK',

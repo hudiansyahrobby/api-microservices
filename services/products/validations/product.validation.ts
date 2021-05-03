@@ -29,7 +29,7 @@ const product = {
             'any.required': `description is a required field`,
         }),
 
-        categoryId: Joi.string().guid().trim().required().messages({
+        categoryId: Joi.string().trim().required().messages({
             'string.base': `categoryId must be a type of string`,
             'string.empty': `categoryId cannot be an empty field`,
             'any.required': `categoryId is a required field`,

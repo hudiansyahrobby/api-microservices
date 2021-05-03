@@ -128,13 +128,13 @@ components:
           example: "Mataram"
         about:
           type: string
-          example: "Manusia bernapas"
+          example: "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
         job:
           type: string
           example: "QA Tester"
         birthday:
           type: string
-          example: "23:05:2020"
+          example: "2019-09-07"
   securitySchemes:
     bearerAuth:
       type: http
